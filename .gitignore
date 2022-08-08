@@ -1,0 +1,5 @@
+/.vscode
+/assets
+/build
+/libs
+compile_commands.json
