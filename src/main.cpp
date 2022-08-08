@@ -1,7 +1,7 @@
 // OpenGL includes
-#define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 // local file includes
 #include "primitives/shader.hpp"
@@ -34,42 +34,56 @@ Object* selected_object; // currently clicked on object
 double cursor_offset_x;
 double cursor_offset_y;
 
-void handle_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods);
-void handle_mouse_input(GLFWwindow* window, int button, int action, int mods);
-void handle_cursor_pos(GLFWwindow *window, double xpos, double ypos);
+SDL_Window* window = NULL;
+SDL_GLContext context;
 
-int main()
+bool init_sdl()
 {
-	// initialize glfw
-	glfwInit();
-
-	// targeting opengl 3.3 core profile (better efficiency)
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	// disable window resizing
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-	// enable vsync
-	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-
-	// create window
-	auto window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "Cattimus weird vtuber thing", NULL, NULL);
-
-	// initialize opengl
-	glfwMakeContextCurrent(window);
-
-	// load opengl extensions with glad
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	if(SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		return -1;
+		std::cout << "Failed to init SDL" << std::endl;
+		return false;
 	}
 
-	glfwSetKeyCallback(window, handle_keyboard_input);
-	glfwSetMouseButtonCallback(window, handle_mouse_input);
-	glfwSetCursorPosCallback(window, handle_cursor_pos);
+	int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
+	if(IMG_Init(img_flags) != img_flags)
+	{
+		std::cout << "SDL_Image init failed" << std::endl;
+		return false;
+	}
+
+	//set opengl attributes
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
+
+	//create window
+	window = SDL_CreateWindow("Cattimus' Vtuber Simulator",
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		DEFAULT_WIDTH, DEFAULT_HEIGHT,
+		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+	if(!window)
+	{
+		std::cout << "SDL window creation failed" << std::endl;
+		return false;
+	}
+
+	//create openGL context
+	context = SDL_GL_CreateContext(window);
+	if(!context)
+	{
+		std::cout << "OpenGL context creation failed" << std::endl;
+		return false;
+	}
+
+	// load opengl extensions with glad
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		return false;
+	}
 
 	// set initial size of virtual canvas
 	glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -77,6 +91,105 @@ int main()
 	// enable transparent textures
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	return true;
+}
+
+void quit_sdl()
+{
+	if(window)
+	{
+		SDL_DestroyWindow(window);
+		window = NULL;
+	}
+
+	SDL_Quit();
+}
+
+void handle_input(bool& running)
+{
+	SDL_Event e;
+	while(SDL_PollEvent(&e) != 0)
+	{
+		switch(e.type)
+		{
+			case SDL_QUIT:
+			{
+				running = false;
+			}
+
+			case SDL_MOUSEBUTTONDOWN:
+			{
+				// calculate where click is in opengl coordinates
+				double adjusted_xpos = e.button.x / (DEFAULT_WIDTH / (double)2) - 1;
+				double adjusted_ypos = (e.button.y / (DEFAULT_HEIGHT / (double)2) - 1) * -1;
+
+				// split player at y value
+				if (e.button.button == SDL_BUTTON_RIGHT && e.button.state == SDL_PRESSED)
+				{
+					if (player->clicked(adjusted_xpos, adjusted_ypos))
+					{
+						player->split(adjusted_ypos);
+					}
+				}
+
+				// move player/object
+				if (e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_PRESSED)
+				{
+					cursor_offset_x = adjusted_xpos;
+					cursor_offset_y = adjusted_ypos;
+
+					// TODO - check if any entities have been clicked on
+					if (player->clicked(adjusted_xpos, adjusted_ypos))
+					{
+						selected_object = player;
+					}
+				}
+			}
+
+			case SDL_MOUSEBUTTONUP:
+			{
+				if(e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_RELEASED)
+				{
+					selected_object = NULL;
+				}
+			}
+
+			case SDL_MOUSEMOTION:
+			{
+				if (selected_object)
+				{
+					double adjusted_xpos = e.motion.x / (DEFAULT_WIDTH / (double)2) - 1;
+					double adjusted_ypos = (e.motion.y / (DEFAULT_HEIGHT / (double)2) - 1) * -1;
+
+					selected_object->relative_move(adjusted_xpos - cursor_offset_x, adjusted_ypos - cursor_offset_y);
+					cursor_offset_x = adjusted_xpos;
+					cursor_offset_y = adjusted_ypos;
+				}
+			}
+
+			case SDL_KEYDOWN:
+			{
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_r:
+					{
+						player->reset_position();
+						player->set_origin(glm::vec3(0, -0.25, 0));
+					}
+				}
+			}
+		}
+	}
+}
+
+int main()
+{
+	auto result = init_sdl();
+	if(!result)
+	{
+		return 0;
+	}
 
 	// transform view
 	view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.1f));
@@ -90,24 +203,18 @@ int main()
 	player_tex = new Texture("../assets/catt_transparent.png", GL_LINEAR);
 	player = new Avatar(glm::vec3(1.5, 1.5, 0), player_tex);
 	player->set_origin(glm::vec3(0, -0.25, 0));
-	double last = glfwGetTime();
 
 	// audio input from microphone
 	mic_input voice;
 
-	// perform opengl rendering
-	while (!glfwWindowShouldClose(window))
+	bool running = true;
+	while(running)
 	{
-		double now = glfwGetTime();
-		delta_val = now - last;
-		last = now;
+		handle_input(running);
 
 		// clear previous frame
 		glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		// perform user inputs
-		glfwPollEvents();
 
 		if (player)
 		{
@@ -120,8 +227,7 @@ int main()
 			player->draw();
 		}
 
-		// push render to screen
-		glfwSwapBuffers(window);
+		SDL_GL_SwapWindow(window);
 	}
 
 	// clean up memory
@@ -130,72 +236,6 @@ int main()
 	delete image_shader;
 	delete color_shader;
 
-	// free GLFW memory
-	glfwTerminate();
-
+	quit_sdl();
 	return 0;
-}
-
-void handle_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (action == GLFW_PRESS)
-	{
-		if (key == GLFW_KEY_R)
-		{
-			player->reset_position();
-			player->set_origin(glm::vec3(0, -0.25, 0));
-		}
-	}
-}
-
-void handle_cursor_pos(GLFWwindow* window, double xpos, double ypos)
-{
-	if (selected_object)
-	{
-		double adjusted_xpos = xpos / (DEFAULT_WIDTH / (double)2) - 1;
-		double adjusted_ypos = (ypos / (DEFAULT_HEIGHT / (double)2) - 1) * -1;
-
-		selected_object->relative_move(adjusted_xpos - cursor_offset_x, adjusted_ypos - cursor_offset_y);
-		cursor_offset_x = adjusted_xpos;
-		cursor_offset_y = adjusted_ypos;
-	}
-}
-
-void handle_mouse_input(GLFWwindow* window, int button, int action, int mods)
-{
-	if (action == GLFW_PRESS)
-	{
-		// calculate where click is in opengl coordinates
-		double xpos, ypos;
-		glfwGetCursorPos(window, &xpos, &ypos);
-		double adjusted_xpos = xpos / (DEFAULT_WIDTH / (double)2) - 1;
-		double adjusted_ypos = (ypos / (DEFAULT_HEIGHT / (double)2) - 1) * -1;
-
-		// split player at y value
-		if (button == GLFW_MOUSE_BUTTON_RIGHT)
-		{
-			if (player->clicked(adjusted_xpos, adjusted_ypos))
-			{
-				player->split(adjusted_ypos);
-			}
-		}
-
-		// move player/object
-		if (button == GLFW_MOUSE_BUTTON_LEFT)
-		{
-			cursor_offset_x = adjusted_xpos;
-			cursor_offset_y = adjusted_ypos;
-
-			// TODO - check if any entities have been clicked on
-			if (player->clicked(adjusted_xpos, adjusted_ypos))
-			{
-				selected_object = player;
-			}
-		}
-	}
-
-	else if (action == GLFW_RELEASE)
-	{
-		selected_object = NULL;
-	}
 }
