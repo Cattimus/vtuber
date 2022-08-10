@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL.h>
 #include "shaders.hpp"
 #include "project_includes.hpp"
 
@@ -7,52 +8,22 @@ class Object
 {
 protected:
 	//translation data
-	glm::vec3 original_size;
-	glm::vec3 size;
-	glm::vec3 origin;
-	glm::vec3 offset;
-	glm::mat4 model;
-	float move_speed;
-
-	void update_position()
-	{
-		model = glm::translate(glm::mat4(1.0f), this->get_position());
-	}
-
-	void delta_move(float x, float y)
-	{
-		offset.x += (x * *delta);
-		offset.y += (y * *delta);
-	}
-
-public:
-	//movement flags
-	bool up;
-	bool down;
-	bool left;
-	bool right;
+	SDL_Rect origin;
+	SDL_Rect offset;
 	
-	explicit Object(glm::vec3 size)
+public:
+	explicit Object(SDL_Rect size)
 	{	
-		this->move_speed = 0;
-		this->model = glm::mat4(1.0f);
-
-		this->up = false;
-		this->down = false;
-		this->left = false;
-		this->right = false;
-
 		origin.x = 0;
 		origin.y = 0;
-		origin.z = 0;
 
 		offset.x = 0;
 		offset.y = 0;
-		offset.z = 0;
 
-		this->size.x = (size.x / 2);
-		this->size.y = (size.y / 2);
-		this->original_size = this->size;
+		this->offset.w = (size.w / 2);
+		this->offset.h = (size.h / 2);
+		this->origin.w = offset.w;
+		this->origin.h = offset.h;
 	}
 
 	//copy constructor
@@ -71,16 +42,8 @@ public:
 		}
 
 		//copy data
-		this->model = to_copy.model;
-		this->up = to_copy.up;
-		this->down = to_copy.down;
-		this->left = to_copy.left;
-		this->right = to_copy.right;
 		this->origin = to_copy.origin;
 		this->offset = to_copy.offset;
-		this->size = to_copy.size;
-		this->move_speed = to_copy.move_speed;
-		this->original_size = to_copy.original_size;
 
 		return *this;
 	}
@@ -88,12 +51,12 @@ public:
 	//AABB collision detection
 	bool clicked(double x, double y)
 	{
-		glm::vec3 current_pos = get_position();
+		SDL_Rect current_pos = get_position();
 		
-		double xmin = current_pos.x - size.x;
-		double xmax = current_pos.x + size.x;
-		double ymin = current_pos.y - size.y;
-		double ymax = current_pos.y + size.y;
+		double xmin = current_pos.x - current_pos.w;
+		double xmax = current_pos.x + current_pos.w;
+		double ymin = current_pos.y - current_pos.h;
+		double ymax = current_pos.y + current_pos.h;
 		
 		if((x >= xmin && x <= xmax) &&
 		   (y >= ymin && y <= ymax))
@@ -106,25 +69,30 @@ public:
 	
 	double get_width()
 	{
-		return size.x;
+		return offset.w;
 	}
 
 	double get_height()
 	{
-		return size.y;
+		return offset.y;
 	}
 
-	glm::vec3 get_position()
+	SDL_Rect get_position()
 	{
-		return origin + offset;
+		SDL_Rect output;
+		output.x = origin.x + offset.x;
+		output.y = origin.y + offset.y;
+		output.w = offset.w;
+		output.h = offset.h;
+		return output;
 	}
-
-	glm::vec3 get_origin()
+	
+	SDL_Rect get_origin()
 	{
 		return origin;
 	}
 
-	glm::vec3 get_offset()
+	SDL_Rect get_offset()
 	{
 		return offset;
 	}
@@ -136,37 +104,9 @@ public:
 	}
 	
 	//update origin
-	void set_origin(glm::vec3 new_origin)
+	void set_origin(SDL_Rect new_origin)
 	{
 		origin = new_origin;
-	}
-
-	void set_speed(float move_speed)
-	{
-		this->move_speed = move_speed;
-	}
-
-	void move()
-	{
-		if(up)
-		{
-			delta_move(0, move_speed);
-		}
-
-		if(down)
-		{
-			delta_move(0, move_speed * -1);
-		}
-
-		if(left)
-		{
-			delta_move(move_speed * -1, 0);
-		}
-
-		if(right)
-		{
-			delta_move(move_speed, 0);
-		}
 	}
 
 	//move to absolute location
