@@ -20,19 +20,18 @@ private:
 	Entity* avatar_bottom;
 	bool is_split;
 
-	double talk_height = 0.25 * screen_height;
+	double talk_height = 100;
 
 	//move both sub-objects by their origins. This means they can move freely
 	void update_position()
 	{
+		SDL_Rect position = get_position();
 		if(!avatar_bottom)
 		{
-			SDL_Rect position = get_position();
 			avatar_top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
 		}
 		else
 		{
-			SDL_Rect position = get_position();
 			avatar_top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
 			avatar_bottom->set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
 		}
@@ -45,10 +44,10 @@ public:
 	{
 		//this approach possibly doesn't work
 		this->is_split = false;
-		this->top_origin = size;
-		this->bottom_origin = size;
+		this->top_origin = (SDL_Rect){0,0, size.w, size.h};
+		this->bottom_origin = (SDL_Rect){0,0, size.w, size.h};
 
-		this->avatar_top = new Entity(size, texture);
+		this->avatar_top = new Entity((SDL_Rect){0,0, size.w, size.h}, texture);
 		avatar_bottom = NULL;
 	}
 
@@ -100,25 +99,6 @@ public:
 		}
 	}
 
-	//AABB collision detection
-	bool clicked(double x, double y)
-	{
-		SDL_Rect current_pos = get_position();
-		
-		double xmin = current_pos.x - offset.w;
-		double xmax = current_pos.x + offset.w;
-		double ymin = current_pos.y - offset.h;
-		double ymax = current_pos.y + offset.h;
-		
-		if((x >= xmin && x <= xmax) &&
-		   (y >= ymin && y <= ymax))
-		{
-			return true;
-		}
-
-		return false;
-	}
-
 	void draw()
 	{
 		update_position();
@@ -134,28 +114,22 @@ public:
 	}
 
 	//split the avatar along the selected line
-	void split(double y)
+	void avatar_split(double y)
 	{
 		if(!is_split)
 		{
-			//adjust y in respect to current position
-			double yval = y - origin.y - offset.y;
-			
-			//reset origin so calculations can occur properly
-			avatar_top->set_origin(0, 0);
+			double yoffset = y - avatar_top->get_position().y;
 
-			//calculate split
+			//set origin to 0 in order to calculate properly
+			avatar_top->set_origin(0,0);
 			avatar_bottom = new Entity(*avatar_top);
-			avatar_top->split(yval, 1);
-			avatar_bottom->split(yval, -1);
 
-			//store position offsets
+			avatar_top->entity_split(yoffset, 1);
+			avatar_bottom->entity_split(yoffset, -1);
+
 			top_origin = avatar_top->get_origin();
 			bottom_origin = avatar_bottom->get_origin();
 
-			//move top so split is visible
-			//talk(1);
-			
 			is_split = true;
 		}
 	}
@@ -179,7 +153,7 @@ public:
 		
 		double move_val = height * talk_height;
 		avatar_top->reset_position();
-		avatar_top->relative_move(0, move_val);
+		avatar_top->relative_move(0, move_val * -1);
 	}
 
 	//move all entities back to origin

@@ -13,14 +13,14 @@ protected:
 public:
 	explicit Object(SDL_Rect size)
 	{	
-		origin.x = 0;
-		origin.y = 0;
+		origin.x = size.x;
+		origin.y = size.y;
 
 		offset.x = 0;
 		offset.y = 0;
 
-		this->offset.w = (size.w / 2);
-		this->offset.h = (size.h / 2);
+		this->offset.w = size.w;
+		this->offset.h = size.h;
 		this->origin.w = offset.w;
 		this->origin.h = offset.h;
 	}
@@ -31,7 +31,7 @@ public:
 		*this = to_copy;
 	}
 
-	//overload assignment operator(shallow copy)
+	//overload assignment operator
 	Object& operator=(const Object& to_copy)
 	{
 		//self assignment gaurd
@@ -52,10 +52,10 @@ public:
 	{
 		SDL_Rect current_pos = get_position();
 		
-		double xmin = current_pos.x - current_pos.w;
-		double xmax = current_pos.x + current_pos.w;
-		double ymin = current_pos.y - current_pos.h;
-		double ymax = current_pos.y + current_pos.h;
+		double xmin = current_pos.x;
+		double xmax = current_pos.x + offset.w;
+		double ymin = current_pos.y;
+		double ymax = current_pos.y + offset.h;
 		
 		if((x >= xmin && x <= xmax) &&
 		   (y >= ymin && y <= ymax))
@@ -98,8 +98,8 @@ public:
 
 	void reset_position()
 	{
-		offset.x = origin.x;
-		offset.y = origin.y;
+		offset.x = 0;
+		offset.y = 0;
 	}
 	
 	//update origin
@@ -112,6 +112,12 @@ public:
 	{
 		origin.x = x;
 		origin.y = y;
+	}
+
+	void set_offset(double x, double y)
+	{
+		offset.x = x;
+		offset.y = y;
 	}
 
 	//move to absolute location
@@ -128,5 +134,14 @@ public:
 	{
 		offset.x += x;
 		offset.y += y;
+	}
+
+	void print_position()
+	{
+		SDL_Rect position = get_position();
+
+		std::cout << "x: " << position.x;
+		std::cout << " y: " << position.y;
+		std::cout << std::endl;
 	}
 };

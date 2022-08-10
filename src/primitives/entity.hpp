@@ -15,7 +15,7 @@ public:
 	Entity(SDL_Rect size, Texture* texture) : Object(size)
 	{	
 		this->texture = texture;
-		texture_coords = {0, 0, texture->getw(), texture->geth()};
+		texture_coords = (SDL_Rect){0, 0, texture->getw(), texture->geth()};
 	}
 
 	//copy constructor
@@ -34,28 +34,33 @@ public:
 
 		Object::operator=(to_copy);
 		this->texture = to_copy.texture;
+		this->texture_coords = to_copy.texture_coords;
 		return *this;
 	}
 
-	void split(double y, int position)
+	//split the object into two rectangles at position y
+	void entity_split(double y, int position)
 	{
-		double relative_y = y - offset.y; //y relative to the object's position
-		
-		double bottom_portion = relative_y + offset.h; //portion of the object taken up by the bottom (split at y)
-		double top_portion = (offset.h * 2) - bottom_portion; //portion of the object taken up by the top (split at y)
-
-		//new texture coordinate offset, will always use bottom portion
-		//double texture_offset = bottom_portion / (offset.h * 2);
+		SDL_Rect curpos = get_position();
+		double top_height = y;
+		double bottom_height = curpos.h - y;
+		double top_texcoord_h = round((texture->geth() / (double)curpos.h) * top_height);
 
 		//update origin to reflect slice
 		if(position > 0)
 		{
-			origin.y += bottom_portion / 2;
+			texture_coords.h = top_texcoord_h;
+			origin.h = top_height;
+			offset.h = top_height;
 		}
 
 		if(position < 0)
 		{
-			origin.y -= top_portion / 2;
+			origin.y += top_height;
+			origin.h = bottom_height;
+			offset.h = bottom_height;
+			texture_coords.h -= top_texcoord_h;
+			texture_coords.y += top_texcoord_h;
 		}
 	}
 

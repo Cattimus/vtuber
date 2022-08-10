@@ -39,6 +39,9 @@ bool init_sdl()
 		return false;
 	}
 
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+
 	//create window
 	window = SDL_CreateWindow("Cattimus' Vtuber Simulator",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -102,7 +105,7 @@ void handle_input(bool& running)
 				{
 					if (player->clicked(x, y))
 					{
-						player->split(y);
+						player->avatar_split(y);
 					}
 				}
 
@@ -135,21 +138,9 @@ void handle_input(bool& running)
 					auto x = e.button.x;
 					auto y = e.button.y;
 
-					//TODO - fix glitchy movement when going offscreen
 					selected_object->relative_move(x - cursor_offset_x, y - cursor_offset_y);
 					cursor_offset_x = x;
 					cursor_offset_y = y;
-				}
-			}
-
-			case SDL_KEYDOWN:
-			{
-				switch(e.key.keysym.sym)
-				{
-					case SDLK_r:
-					{
-						player->reset_position();
-					}
 				}
 			}
 		}
@@ -166,7 +157,11 @@ int main()
 
 	delta = &delta_val;
 	player_tex = new Texture("../assets/catt_transparent.png");
-	player = new Avatar((SDL_Rect){(int)(screen_height * 0.25), (int)(screen_height * 0.25), (int)(screen_width * 1.5), (int)(screen_height *1.5)}, player_tex);
+	player = new Avatar((SDL_Rect){(int)(screen_height * 0.25),
+								   (int)(screen_height * 0.25), 
+								   (int)(screen_width  * 0.75), 
+								   (int)(screen_height * 0.75)}, 
+								   player_tex);
 
 	// audio input from microphone
 	mic_input voice;
