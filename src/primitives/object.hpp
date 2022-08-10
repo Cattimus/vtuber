@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SDL.h>
-#include "shaders.hpp"
 #include "project_includes.hpp"
 
 class Object
@@ -10,7 +9,7 @@ protected:
 	//translation data
 	SDL_Rect origin;
 	SDL_Rect offset;
-	
+
 public:
 	explicit Object(SDL_Rect size)
 	{	
@@ -107,6 +106,12 @@ public:
 	void set_origin(SDL_Rect new_origin)
 	{
 		origin = new_origin;
+	}
+
+	void set_origin(double x, double y)
+	{
+		origin.x = x;
+		origin.y = y;
 	}
 
 	//move to absolute location

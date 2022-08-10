@@ -2,4 +2,5 @@
 /assets
 /build
 /libs
+/shaders
 compile_commands.json

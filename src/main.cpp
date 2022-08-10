@@ -11,7 +11,6 @@
 #include "primitives/avatar.hpp"
 #include "primitives/entity.hpp"
 #include "shaders.hpp"
-#include "project_includes.hpp"
 #include "user_input/mic_input.hpp"
 
 // TODO - hot swap image while program is running
@@ -24,18 +23,12 @@ int screen_width = 960;
 int screen_height = 540;
 double delta_val = 0;
 
-glm::mat4 projection(1.0f);
-glm::mat4 view(1.0f);
-
 Avatar* player; // avatar that the user will be controlling
 Texture* player_tex;
 Object* selected_object; // currently clicked on object
 
 double cursor_offset_x;
 double cursor_offset_y;
-
-SDL_Window* window = NULL;
-SDL_GLContext context;
 
 bool init_sdl()
 {
@@ -52,12 +45,6 @@ bool init_sdl()
 		return false;
 	}
 
-	//set opengl attributes
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
-
 	//create window
 	window = SDL_CreateWindow("Cattimus' Vtuber Simulator",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -69,28 +56,15 @@ bool init_sdl()
 		std::cout << "SDL window creation failed" << std::endl;
 		return false;
 	}
+	screen = SDL_GetWindowSurface(window);
 
-	//create openGL context
-	context = SDL_GL_CreateContext(window);
-	if(!context)
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	if(!renderer)
 	{
-		std::cout << "OpenGL context creation failed" << std::endl;
+		std::cout << "SDL Renderer creation failed" << std::endl;
 		return false;
 	}
-
-	// load opengl extensions with glad
-	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		return false;
-	}
-
-	// set initial size of virtual canvas
-	glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-
-	// enable transparent textures
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	SDL_SetRenderDrawColor(renderer, 51, 51, 77, 0xFF);
 
 	return true;
 }
@@ -103,7 +77,14 @@ void quit_sdl()
 		window = NULL;
 	}
 
+	if(renderer)
+	{
+		SDL_DestroyRenderer(renderer);
+		renderer = NULL;
+	}
+
 	SDL_Quit();
+	IMG_Quit();
 }
 
 void handle_input(bool& running)
@@ -175,7 +156,7 @@ void handle_input(bool& running)
 					case SDLK_r:
 					{
 						player->reset_position();
-						player->set_origin(glm::vec3(0, -0.25, 0));
+						player->set_origin(0, -0.25);
 					}
 				}
 			}
@@ -191,18 +172,9 @@ int main()
 		return 0;
 	}
 
-	// transform view
-	view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.1f));
-
-	// set projection to perspective matrix
-	projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
-
-	// setup resources
-	init_shaders();
 	delta = &delta_val;
-	player_tex = new Texture("../assets/catt_transparent.png", GL_LINEAR);
-	player = new Avatar(glm::vec3(1.5, 1.5, 0), player_tex);
-	player->set_origin(glm::vec3(0, -0.25, 0));
+	player_tex = new Texture("../assets/catt_transparent.png");
+	player = new Avatar((SDL_Rect){0, (int)(screen_height * -0.25), (int)(screen_width * 1.5), (int)(screen_height *1.5)}, player_tex);
 
 	// audio input from microphone
 	mic_input voice;
@@ -212,29 +184,19 @@ int main()
 	{
 		handle_input(running);
 
-		// clear previous frame
-		glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
+		SDL_RenderClear(renderer);
 		if (player)
 		{
 			// draw objects with textures
-			image_shader->use();
-			image_shader->set_mat4f("projection", projection);
-			image_shader->set_mat4f("view", view);
 			player->talk(voice.get());
-			player->move();
 			player->draw();
 		}
-
-		SDL_GL_SwapWindow(window);
+		SDL_RenderPresent(renderer);
 	}
 
 	// clean up memory
 	delete player;
 	delete player_tex;
-	delete image_shader;
-	delete color_shader;
 
 	quit_sdl();
 	return 0;

@@ -5,8 +5,7 @@ project(main)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCES
-	src/main.cpp
-	libs/glad/glad.c)
+	src/main.cpp)
 
 include_directories(libs)
 include_directories(src)

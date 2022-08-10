@@ -3,8 +3,8 @@
 #include "project_includes.hpp"
 #include "object.hpp"
 #include "texture.hpp"
-#include "shader.hpp"
 #include "entity.hpp"
+#include <SDL.h>
 
 //TODO - tie an entity to another entity (accessories)
 //TODO - implement flipping image horizontally and vertically
@@ -13,8 +13,8 @@ class Avatar : public Object
 {
 private:
 	//copies of origins for both values
-	glm::vec3 top_origin;
-	glm::vec3 bottom_origin;
+	SDL_Rect top_origin;
+	SDL_Rect bottom_origin;
 
 	Entity* avatar_top;
 	Entity* avatar_bottom;
@@ -27,23 +27,26 @@ private:
 	{
 		if(!avatar_bottom)
 		{
-			avatar_top->set_origin(top_origin + get_position());
+			SDL_Rect position = get_position();
+			avatar_top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
 		}
 		else
 		{
-			avatar_top->set_origin(top_origin + get_position());
-			avatar_bottom->set_origin(bottom_origin + get_position());
+			SDL_Rect position = get_position();
+			avatar_top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
+			avatar_bottom->set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
 		}
 	}
 
 public:
 
 	//create new (unsplit) avatar
-	Avatar(glm::vec3 size, Texture* texture) : Object(size)
+	Avatar(SDL_Rect size, Texture* texture) : Object(size)
 	{
+		//this approach possibly doesn't work
 		this->is_split = false;
-		this->top_origin = glm::vec3(0,0,0);
-		this->bottom_origin = glm::vec3(0,0,0);
+		this->top_origin = size;
+		this->bottom_origin = size;
 
 		this->avatar_top = new Entity(size, texture);
 		avatar_bottom = NULL;
@@ -100,12 +103,12 @@ public:
 	//AABB collision detection
 	bool clicked(double x, double y)
 	{
-		glm::vec3 current_pos = get_position();
+		SDL_Rect current_pos = get_position();
 		
-		double xmin = current_pos.x - size.x;
-		double xmax = current_pos.x + size.x;
-		double ymin = current_pos.y - size.y;
-		double ymax = current_pos.y + size.y;
+		double xmin = current_pos.x - offset.w;
+		double xmax = current_pos.x + offset.w;
+		double ymin = current_pos.y - offset.h;
+		double ymax = current_pos.y + offset.h;
 		
 		if((x >= xmin && x <= xmax) &&
 		   (y >= ymin && y <= ymax))
@@ -139,7 +142,7 @@ public:
 			double yval = y - origin.y - offset.y;
 			
 			//reset origin so calculations can occur properly
-			avatar_top->set_origin(glm::vec3(0,0,0));
+			avatar_top->set_origin(0, 0);
 
 			//calculate split
 			avatar_bottom = new Entity(*avatar_top);
@@ -182,7 +185,8 @@ public:
 	//move all entities back to origin
 	void reset_position()
 	{	
-		offset = glm::vec3(0,0,0);
+		offset.x = 0;
+		offset.y = 0;
 	}
 
 	void set_talk_height(double height)
