@@ -13,3 +13,5 @@ double* delta;
 SDL_Window* window;
 SDL_Surface* screen;
 SDL_Renderer* renderer;
+int screen_width = 960;
+int screen_height = 540;

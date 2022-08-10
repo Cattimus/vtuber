@@ -20,7 +20,7 @@ private:
 	Entity* avatar_bottom;
 	bool is_split;
 
-	double talk_height = 0.25;
+	double talk_height = 0.25 * screen_height;
 
 	//move both sub-objects by their origins. This means they can move freely
 	void update_position()

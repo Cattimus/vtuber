@@ -98,8 +98,8 @@ public:
 
 	void reset_position()
 	{
-		offset.x = 0;
-		offset.y = 0;
+		offset.x = origin.x;
+		offset.y = origin.y;
 	}
 	
 	//update origin

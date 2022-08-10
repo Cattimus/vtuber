@@ -15,9 +15,6 @@
 // screen size defaults
 const unsigned int DEFAULT_WIDTH = 960;
 const unsigned int DEFAULT_HEIGHT = 540;
-
-int screen_width = 960;
-int screen_height = 540;
 double delta_val = 0;
 
 Avatar* player; // avatar that the user will be controlling
@@ -98,27 +95,25 @@ void handle_input(bool& running)
 
 			case SDL_MOUSEBUTTONDOWN:
 			{
-				// calculate where click is in opengl coordinates
-				double adjusted_xpos = e.button.x / (DEFAULT_WIDTH / (double)2) - 1;
-				double adjusted_ypos = (e.button.y / (DEFAULT_HEIGHT / (double)2) - 1) * -1;
-
+				auto x = e.button.x;
+				auto y = e.button.y;
 				// split player at y value
 				if (e.button.button == SDL_BUTTON_RIGHT && e.button.state == SDL_PRESSED)
 				{
-					if (player->clicked(adjusted_xpos, adjusted_ypos))
+					if (player->clicked(x, y))
 					{
-						player->split(adjusted_ypos);
+						player->split(y);
 					}
 				}
 
 				// move player/object
 				if (e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_PRESSED)
 				{
-					cursor_offset_x = adjusted_xpos;
-					cursor_offset_y = adjusted_ypos;
+					cursor_offset_x = x;
+					cursor_offset_y = y;
 
 					// TODO - check if any entities have been clicked on
-					if (player->clicked(adjusted_xpos, adjusted_ypos))
+					if (player->clicked(x, y))
 					{
 						selected_object = player;
 					}
@@ -137,12 +132,13 @@ void handle_input(bool& running)
 			{
 				if (selected_object)
 				{
-					double adjusted_xpos = e.motion.x / (DEFAULT_WIDTH / (double)2) - 1;
-					double adjusted_ypos = (e.motion.y / (DEFAULT_HEIGHT / (double)2) - 1) * -1;
+					auto x = e.button.x;
+					auto y = e.button.y;
 
-					selected_object->relative_move(adjusted_xpos - cursor_offset_x, adjusted_ypos - cursor_offset_y);
-					cursor_offset_x = adjusted_xpos;
-					cursor_offset_y = adjusted_ypos;
+					//TODO - fix glitchy movement when going offscreen
+					selected_object->relative_move(x - cursor_offset_x, y - cursor_offset_y);
+					cursor_offset_x = x;
+					cursor_offset_y = y;
 				}
 			}
 
@@ -153,7 +149,6 @@ void handle_input(bool& running)
 					case SDLK_r:
 					{
 						player->reset_position();
-						player->set_origin(0, -0.25);
 					}
 				}
 			}
@@ -171,7 +166,7 @@ int main()
 
 	delta = &delta_val;
 	player_tex = new Texture("../assets/catt_transparent.png");
-	player = new Avatar((SDL_Rect){0, (int)(screen_height * -0.25), (int)(screen_width * 1.5), (int)(screen_height *1.5)}, player_tex);
+	player = new Avatar((SDL_Rect){(int)(screen_height * 0.25), (int)(screen_height * 0.25), (int)(screen_width * 1.5), (int)(screen_height *1.5)}, player_tex);
 
 	// audio input from microphone
 	mic_input voice;

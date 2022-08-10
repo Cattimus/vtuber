@@ -8,6 +8,8 @@ class Texture
 {
 private:
 	SDL_Texture* texture;
+	int w;
+	int h;
 
 public:
 	Texture(const char* path)
@@ -17,9 +19,21 @@ public:
 		{
 			printf("Failed to load image for texture\n");
 		}
+		w = img_temp->w;
+		h = img_temp->h;
 
 		texture = SDL_CreateTextureFromSurface(renderer, img_temp);
 		SDL_FreeSurface(img_temp);
+	}
+
+	int getw()
+	{
+		return w;
+	}
+
+	int geth()
+	{
+		return h;
 	}
 
 	~Texture()
