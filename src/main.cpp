@@ -4,13 +4,10 @@
 #include <SDL2/SDL_image.h>
 
 // local file includes
-#include "primitives/shader.hpp"
 #include "primitives/texture.hpp"
 #include "primitives/object.hpp"
-#include "primitives/debug_line.hpp"
 #include "primitives/avatar.hpp"
 #include "primitives/entity.hpp"
-#include "shaders.hpp"
 #include "user_input/mic_input.hpp"
 
 // TODO - hot swap image while program is running

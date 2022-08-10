@@ -2,7 +2,7 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-#include "project_includes.hpp"
+#include "globals.hpp"
 
 class Texture
 {

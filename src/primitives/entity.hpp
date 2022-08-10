@@ -1,6 +1,6 @@
 #pragma once
 
-#include "project_includes.hpp"
+#include "globals.hpp"
 #include "object.hpp"
 #include "texture.hpp"
 

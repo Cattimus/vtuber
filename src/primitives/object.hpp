@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL.h>
-#include "project_includes.hpp"
+#include "globals.hpp"
 
 class Object
 {
