@@ -1,7 +1,7 @@
 // OpenGL includes
 #include <glad/glad.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 // local file includes
 #include "primitives/texture.hpp"
@@ -9,6 +9,9 @@
 #include "primitives/avatar.hpp"
 #include "primitives/entity.hpp"
 #include "user_input/mic_input.hpp"
+
+//lua bindings for object
+#include "lua_bindings/object_binding.hpp"
 
 // TODO - hot swap image while program is running
 
@@ -21,8 +24,30 @@ Avatar* player; // avatar that the user will be controlling
 Texture* player_tex;
 Object* selected_object; // currently clicked on object
 
+lua_State* l;
+
 double cursor_offset_x;
 double cursor_offset_y;
+
+extern "C"
+{
+	#include <lua.h>
+	#include <lauxlib.h>
+	#include <lualib.h>
+
+	static int get_player(lua_State* L)
+	{
+		//don't return a reference if player is not initialized
+		if(!player)
+		{
+			return 0;
+		}
+
+		//give lua the player as converted to an object.
+		lua_bindings::create_object(L, (Object*)player);
+		return 1;
+	}
+}
 
 bool init_sdl()
 {
@@ -64,6 +89,18 @@ bool init_sdl()
 	SDL_SetRenderDrawColor(renderer, 51, 51, 77, 0xFF);
 
 	return true;
+}
+
+void init_lua()
+{
+	l = lua_open();
+	luaL_openlibs(l);
+
+	lua_bindings::luaopen_object(l);
+
+	//TODO - in the future this will be wrapped in an "engine" module
+	lua_pushcfunction(l, get_player);
+	lua_setglobal(l, "get_player");
 }
 
 void quit_sdl()
@@ -150,6 +187,7 @@ void handle_input(bool& running)
 int main()
 {
 	auto result = init_sdl();
+	init_lua();
 	if(!result)
 	{
 		return 0;
@@ -167,6 +205,14 @@ int main()
 	mic_input voice;
 
 	bool running = true;
+	//run lua test script to see if it works
+	luaL_loadfile(l, "../src/scripts/test.lua");
+	if(lua_pcall(l, 0, 0, 0) != 0)
+	{
+		std::cout << "error running file test.lua: " << lua_tostring(l, -1) << std::endl;
+		running = false;
+	}
+	
 	while(running)
 	{
 		handle_input(running);
@@ -186,5 +232,6 @@ int main()
 	delete player_tex;
 
 	quit_sdl();
+	lua_close(l);
 	return 0;
 }
