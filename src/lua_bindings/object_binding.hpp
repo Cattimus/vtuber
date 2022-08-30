@@ -230,6 +230,7 @@ namespace lua_bindings
 		lua_pushvalue(L, -2);
 		lua_settable(L, -3);
 		luaL_openlib(L, NULL, object_local, 0);
+		lua_pop(L, -1); //we need to pop the metatable off the stack, since lua isn't doing that for us
 		return 1;
 	}
 }

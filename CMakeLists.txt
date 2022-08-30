@@ -13,7 +13,8 @@ set(SOURCES
 	src/user_input/mic_input.hpp
 	src/user_input/console.hpp
 	src/globals.hpp
-	src/lua_bindings/object_binding.hpp)
+	src/lua_bindings/object_binding.hpp
+	src/lua_bindings/script.hpp)
 
 include_directories(libs)
 include_directories(src)

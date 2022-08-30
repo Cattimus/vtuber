@@ -12,6 +12,7 @@
 
 //lua bindings for object
 #include "lua_bindings/object_binding.hpp"
+#include "lua_bindings/script.hpp"
 
 // TODO - hot swap image while program is running
 
@@ -24,7 +25,7 @@ Avatar* player; // avatar that the user will be controlling
 Texture* player_tex;
 Object* selected_object; // currently clicked on object
 
-lua_State* l;
+lua_State* L;
 
 double cursor_offset_x;
 double cursor_offset_y;
@@ -93,14 +94,14 @@ bool init_sdl()
 
 void init_lua()
 {
-	l = lua_open();
-	luaL_openlibs(l);
+	L = lua_open();
+	luaL_openlibs(L);
 
-	lua_bindings::luaopen_object(l);
+	lua_bindings::luaopen_object(L);
 
 	//TODO - in the future this will be wrapped in an "engine" module
-	lua_pushcfunction(l, get_player);
-	lua_setglobal(l, "get_player");
+	lua_pushcfunction(L, get_player);
+	lua_setglobal(L, "get_player");
 }
 
 void quit_sdl()
@@ -205,11 +206,21 @@ int main()
 	mic_input voice;
 
 	bool running = true;
+	
 	//run lua test script to see if it works
-	luaL_loadfile(l, "../src/scripts/test.lua");
-	if(lua_pcall(l, 0, 0, 0) != 0)
+	luaL_loadfile(L, "../src/scripts/test.lua");
+	if(lua_pcall(L, 0, 0, 0) != 0)
 	{
-		std::cout << "error running file test.lua: " << lua_tostring(l, -1) << std::endl;
+		std::cout << "error running file test.lua: " << lua_tostring(L, -1) << std::endl;
+		running = false;
+	}
+
+	Script test("../src/scripts/loaded_test.lua", L);
+
+	lua_getglobal(L, "check_sandbox");
+	if(lua_pcall(L, 0, 0, 0) != 0)
+	{
+		std::cout << "error running function check_sandbox: " << lua_tostring(L, -1) << std::endl;
 		running = false;
 	}
 	
@@ -232,6 +243,6 @@ int main()
 	delete player_tex;
 
 	quit_sdl();
-	lua_close(l);
+	lua_close(L);
 	return 0;
 }
