@@ -14,6 +14,7 @@ private:
 public:
 	Texture(const char* path)
 	{
+		//load image from file
 		SDL_Surface* img_temp = IMG_Load(path);
 		if(!img_temp)
 		{
@@ -22,6 +23,7 @@ public:
 		w = img_temp->w;
 		h = img_temp->h;
 
+		//create texture from the loaded surface
 		texture = SDL_CreateTextureFromSurface(renderer, img_temp);
 		SDL_FreeSurface(img_temp);
 	}
@@ -36,6 +38,7 @@ public:
 		return h;
 	}
 
+	//clean memory
 	~Texture()
 	{
 		SDL_DestroyTexture(texture);

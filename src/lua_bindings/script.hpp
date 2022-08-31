@@ -96,7 +96,7 @@ public:
 	{
 		get_function(function_name);
 
-		//push arguments to function
+		//push arguments to stack. this is how they are passed to lua functions
 		for(size_t i = 0; i < args.size(); i++)
 		{
 			lua_arg* temp = &args[i];

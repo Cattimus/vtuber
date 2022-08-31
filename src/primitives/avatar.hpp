@@ -22,7 +22,7 @@ private:
 
 	double talk_height = 100;
 
-	//move both sub-objects by their origins. This means they can move freely
+	//move both sub-objects by their origins in respect to the parent object. This means they can move freely when talking
 	void update_position()
 	{
 		SDL_Rect position = get_position();
@@ -42,11 +42,11 @@ public:
 	//create new (unsplit) avatar
 	Avatar(SDL_Rect size, Texture* texture) : Object(size)
 	{
-		//this approach possibly doesn't work
 		this->is_split = false;
 		this->top_origin = (SDL_Rect){0,0, size.w, size.h};
 		this->bottom_origin = (SDL_Rect){0,0, size.w, size.h};
-
+		
+		//avatar will initially just be the "top" entity. once split the bottom will be initialized
 		this->avatar_top = new Entity((SDL_Rect){0,0, size.w, size.h}, texture);
 		avatar_bottom = NULL;
 	}
@@ -57,7 +57,7 @@ public:
 		*this = to_copy;
 	}
 
-	//assignment operator
+	//assignment operator (copy values)
 	Avatar& operator=(const Avatar& to_copy)
 	{
 		//self assignment guard
@@ -99,6 +99,7 @@ public:
 		}
 	}
 
+	//draw values to screen
 	void draw()
 	{
 		update_position();
@@ -163,6 +164,7 @@ public:
 		offset.y = 0;
 	}
 
+	//set the maximum height of the "talk" function
 	void set_talk_height(double height)
 	{
 		talk_height = height;

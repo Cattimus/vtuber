@@ -13,17 +13,18 @@
 class mic_input
 {
 private:
-	pa_simple* s;
-	double sample_ms;
-	double floor;
-	double scale;
-	int buf_size;
+	pa_simple* s; //pulseaudio reference
+	double sample_ms; //the duration of the sample value in ms
+	double floor; //the cut off value for audio loudness
+	double scale; //how much to scale(multiply) the data by
+	int buf_size; //how many bytes is our sample
 
 	bool running;
-	std::queue<double> samples;
-	std::thread audio_thread;
-	std::mutex sample_lock;
+	std::queue<double> samples; //since our program is multithreaded, we must store samples before they can be processed
+	std::thread audio_thread; //thread that will be accepting audio input
+	std::mutex sample_lock; //mutex lock to synchronize threads
 
+	//thread that will be running in the background
 	void sample_thread()
 	{
 		while(running)
@@ -61,6 +62,7 @@ private:
 				r_total += (r * r);
 			}
 
+			//calculate value in DB
 			double RMS_l = sqrt(l_total / ((double)buf_size / 4));
 			double RMS_r = sqrt(r_total / ((double)buf_size / 4));
 
@@ -70,6 +72,7 @@ private:
 			double scaled_left = (average_l + floor) / scale;
 			double scaled_right = (average_r + floor) / scale;
 
+			//push sample to the queue
 			sample_lock.lock();
 			samples.push((scaled_left + scaled_right) / (double)2);
 			sample_lock.unlock();
@@ -77,14 +80,17 @@ private:
 		
 	}
 
+	//initialize pulseaudio. runs when the class is instantialized
 	void initialize()
 	{
+		//specification for pulseaudio, 44100hz 2 channel 16-bit little endian PCM
 		static const pa_sample_spec ss = {
 			.format = PA_SAMPLE_S16LE,
 			.rate = 44100,
 			.channels = 2
 		};
 
+		//calculate our buffer size based on that data
 		buf_size = (pa_bytes_per_second(&ss) / (double)1000) * sample_ms;
 
 		//tell pulseaudio what we want the buffer size to be
@@ -96,6 +102,7 @@ private:
 			.fragsize = (uint32_t)buf_size
 		};
 
+		//open audio stream
 		int error;
 		s = pa_simple_new(NULL, "main", PA_STREAM_RECORD, NULL, "vtuber audio input", &ss, NULL, &bb, &error);
 		if(!s)
@@ -108,6 +115,7 @@ private:
 public:
 	mic_input()
 	{
+		//default values (good for my setup)
 		sample_ms = 16.6667;
 		floor = 35;
 		scale = 20;
@@ -115,9 +123,11 @@ public:
 
 		initialize();
 
+		//start thread
 		this->audio_thread = std::thread(&mic_input::sample_thread, this);
 	}
 
+	//close our audio when the object goes out of scope
 	~mic_input()
 	{
 		running = false;

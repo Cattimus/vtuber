@@ -10,11 +10,12 @@
 #include "primitives/entity.hpp"
 #include "user_input/mic_input.hpp"
 
-//lua bindings for object
+//lua bindings for objects
 #include "lua_bindings/object_binding.hpp"
 #include "lua_bindings/script.hpp"
 
 // TODO - hot swap image while program is running
+// TODO - make an "engine" api for lua functions
 
 // screen size defaults
 const unsigned int DEFAULT_WIDTH = 960;
@@ -24,7 +25,6 @@ double delta_val = 0;
 Avatar* player; // avatar that the user will be controlling
 Texture* player_tex;
 Object* selected_object; // currently clicked on object
-
 lua_State* L;
 
 double cursor_offset_x;
@@ -36,6 +36,7 @@ extern "C"
 	#include <lauxlib.h>
 	#include <lualib.h>
 
+	//return a reference to the player object for manipulation by lua scripts
 	static int get_player(lua_State* L)
 	{
 		//don't return a reference if player is not initialized
@@ -50,6 +51,7 @@ extern "C"
 	}
 }
 
+//initialize sdl values and return the result
 bool init_sdl()
 {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -57,7 +59,8 @@ bool init_sdl()
 		std::cout << "Failed to init SDL" << std::endl;
 		return false;
 	}
-
+	
+	//initialize SDL_IMG with png and jpg support enabled
 	int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
 	if(IMG_Init(img_flags) != img_flags)
 	{
@@ -65,14 +68,16 @@ bool init_sdl()
 		return false;
 	}
 
+	//set renderer to bilinear scaling
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+	//enable vsync
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
 	//create window
 	window = SDL_CreateWindow("Cattimus' Vtuber Simulator",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		DEFAULT_WIDTH, DEFAULT_HEIGHT,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+		SDL_WINDOW_SHOWN);
 
 	if(!window)
 	{
@@ -80,7 +85,6 @@ bool init_sdl()
 		return false;
 	}
 	screen = SDL_GetWindowSurface(window);
-
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if(!renderer)
 	{
@@ -92,6 +96,7 @@ bool init_sdl()
 	return true;
 }
 
+//initialize the lua environment for calling scripts
 void init_lua()
 {
 	L = lua_open();
@@ -99,11 +104,12 @@ void init_lua()
 
 	lua_bindings::luaopen_object(L);
 
-	//TODO - in the future this will be wrapped in an "engine" module
+	//TODO - in the future this will be wrapped in an "engine" module along with other functions like it
 	lua_pushcfunction(L, get_player);
 	lua_setglobal(L, "get_player");
 }
 
+//exit SDL and clean up values
 void quit_sdl()
 {
 	if(renderer)
@@ -122,6 +128,7 @@ void quit_sdl()
 	SDL_Quit();
 }
 
+//helper function to handle user input
 void handle_input(bool& running)
 {
 	SDL_Event e;
@@ -138,7 +145,8 @@ void handle_input(bool& running)
 			{
 				auto x = e.button.x;
 				auto y = e.button.y;
-				// split player at y value
+
+				// split avatar at y value. player has left clicked the player object
 				if (e.button.button == SDL_BUTTON_RIGHT && e.button.state == SDL_PRESSED)
 				{
 					if (player->clicked(x, y))
@@ -165,10 +173,12 @@ void handle_input(bool& running)
 			{
 				if(e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_RELEASED)
 				{
+					//reset selected_object when mouse button has been released
 					selected_object = NULL;
 				}
 			}
 
+			//move any object that the player has clicked on while the button is held down
 			case SDL_MOUSEMOTION:
 			{
 				if (selected_object)
@@ -205,6 +215,7 @@ int main()
 	// audio input from microphone
 	mic_input voice;
 	
+	//load test scripts
 	Script initial("../src/scripts/test.lua", L);
 	Script test("../src/scripts/loaded_test.lua", L);
 	test.call(L, "move_test", {});
@@ -214,6 +225,7 @@ int main()
 		{LUA_TNUMBER, {.number = 5}}
 		});
 	
+	//main loop
 	bool running = true;
 	while(running)
 	{
@@ -233,6 +245,7 @@ int main()
 	delete player;
 	delete player_tex;
 
+	//clean up libraries
 	quit_sdl();
 	lua_close(L);
 	return 0;

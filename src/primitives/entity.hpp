@@ -43,12 +43,15 @@ public:
 	{
 		SDL_Rect curpos = get_position();
 		double top_height = y;
-		double bottom_height = curpos.h - y;
+		double bottom_height = curpos.h - y; 
+
+		//texture coordinate height for the top value
 		double top_texcoord_h = round((texture->geth() / (double)curpos.h) * top_height);
 
 		//update origin to reflect slice
 		if(position > 0)
 		{
+			//texture coordinate is sliced down to half the value
 			texture_coords.h = top_texcoord_h;
 			origin.h = top_height;
 			offset.h = top_height;
@@ -56,9 +59,12 @@ public:
 
 		if(position < 0)
 		{
+			//y value will be moved down to reflect the changed origin
 			origin.y += top_height;
 			origin.h = bottom_height;
 			offset.h = bottom_height;
+
+			//texture coordinates will be modified to slice the texture in half
 			texture_coords.h -= top_texcoord_h;
 			texture_coords.y += top_texcoord_h;
 		}

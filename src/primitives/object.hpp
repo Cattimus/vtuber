@@ -76,6 +76,7 @@ public:
 		return offset.y;
 	}
 
+	//calculate position (origin + offset)
 	SDL_Rect get_position()
 	{
 		SDL_Rect output;
@@ -96,6 +97,7 @@ public:
 		return offset;
 	}
 
+	//return position to origin
 	void reset_position()
 	{
 		offset.x = 0;
@@ -107,20 +109,20 @@ public:
 	{
 		origin = new_origin;
 	}
-
 	void set_origin(double x, double y)
 	{
 		origin.x = x;
 		origin.y = y;
 	}
 
+	//set offset to an absolute value
 	void set_offset(double x, double y)
 	{
 		offset.x = x;
 		offset.y = y;
 	}
 
-	//move to absolute location
+	//move to absolute location on the screen
 	void move_to(double x, double y)
 	{
 		double adjusted_x = x - origin.x;
@@ -130,12 +132,14 @@ public:
 		offset.y = adjusted_y;
 	}
 
+	//move in respect to the current position
 	void relative_move(double x, double y)
 	{
 		offset.x += x;
 		offset.y += y;
 	}
 
+	//debug function to print the object's current location
 	void print_position()
 	{
 		SDL_Rect position = get_position();
