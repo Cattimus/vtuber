@@ -106,20 +106,20 @@ void init_lua()
 
 void quit_sdl()
 {
-	if(window)
-	{
-		SDL_DestroyWindow(window);
-		window = NULL;
-	}
-
 	if(renderer)
 	{
 		SDL_DestroyRenderer(renderer);
 		renderer = NULL;
 	}
 
-	SDL_Quit();
+	if(window)
+	{
+		SDL_DestroyWindow(window);
+		window = NULL;
+	}
+
 	IMG_Quit();
+	SDL_Quit();
 }
 
 void handle_input(bool& running)

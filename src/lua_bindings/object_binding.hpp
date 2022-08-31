@@ -206,7 +206,8 @@ namespace lua_bindings
 		{"print_position", object_print_position},
 		{NULL, NULL}
 	};
-
+	
+	//define object global methods (empty because we will be using only references)
 	static const struct luaL_Reg object_global [] = {
 		{NULL, NULL}
 	};
