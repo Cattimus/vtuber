@@ -18,6 +18,26 @@ private:
 	std::string file_path;
 	lua_State* L;
 
+	//create a new environment and set it in globals
+	void init_environment()
+	{
+		//env table
+		lua_newtable(L);
+		
+		//give access to print function
+		lua_pushstring(L, "print");
+		lua_getglobal(L, "print");
+		lua_settable(L, -3);
+
+		//give access to getplayer function
+		lua_pushstring(L, "get_player");
+		lua_getglobal(L, "get_player");
+		lua_settable(L, -3);
+		
+		//set environment to the list of globals so it can be referenced later.
+		lua_setglobal(L, (file_path + "env").c_str());
+	}
+
 	//push environment on stack
 	void get_environment()
 	{
@@ -59,25 +79,12 @@ public:
 		file_path = path;
 		this->L = L;
 
-		//env table
-		lua_newtable(L);
-		
-		//give access to print function
-		lua_pushstring(L, "print");
-		lua_getglobal(L, "print");
-		lua_settable(L, -3);
+		//create a new environment for script
+		init_environment();
 
-		//give access to getplayer function
-		lua_pushstring(L, "get_player");
-		lua_getglobal(L, "get_player");
-		lua_settable(L, -3);
-		
-		//set environment to the list of globals so it can be referenced later.
-		lua_setglobal(L, (file_path + "env").c_str());
-
-		//load script values
+		//load script values to environment
 		luaL_loadfile(L, path.c_str());
-		set_environment(); //this will push loaded functions and globals onto the environment of the script
+		set_environment(); 
 		if(lua_pcall(L, 0, 0, 0) != 0)
 		{
 			std::cout << "error running file " << path << ": " << lua_tostring(L, -1) << std::endl;

@@ -204,8 +204,6 @@ int main()
 
 	// audio input from microphone
 	mic_input voice;
-
-	bool running = true;
 	
 	Script initial("../src/scripts/test.lua", L);
 	Script test("../src/scripts/loaded_test.lua", L);
@@ -216,6 +214,7 @@ int main()
 		{LUA_TNUMBER, {.number = 5}}
 		});
 	
+	bool running = true;
 	while(running)
 	{
 		handle_input(running);
