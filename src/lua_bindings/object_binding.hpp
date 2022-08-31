@@ -5,6 +5,7 @@ extern "C"
 	#include "lua.h"
 	#include "lauxlib.h"
 	#include "lualib.h"
+	#include "wrap_struct.h"
 }
 
 #include "primitives/object.hpp"
@@ -13,48 +14,32 @@ namespace lua_bindings
 {
 	Object* get_object(lua_State* L, int index)
 	{
-		luaL_argcheck(L, lua_istable(L, index), index, "table expected");
+		//check object is userdata
+		void* temp = luaL_checkudata(L, index, "vtuber.object");
+		luaL_argcheck(L, temp != NULL, index, "'vtuber.object' expected.");
+		lua_obj* data = (lua_obj*)temp;
 
-		//check type of object (this is a void pointer so we want to be sure)
-		lua_pushstring(L, "type");
-		lua_gettable(L, index);
-		luaL_argcheck(L, lua_isstring(L, -1), -1, "property 'type' is not string");
-		if(std::string("vtuber.object").compare(lua_tostring(L, -1)))
-		{
-			luaL_error(L, "Type mismatch. Input is table but type is not 'vtuber.object'");
-		}
+		//check to ensure object is not corrupted
+		bool correct_header = data->header == HEADER_DEFAULT;
+		bool correct_type = data->type == LUA_OBJ_OBJECT;
+		luaL_argcheck(L, correct_header, index, "Object is corrupted.");
+		luaL_argcheck(L, correct_type, index, "type mismatch. type should be 'vtuber.object'");
 
-		//get data from object
-		lua_pushstring(L, "data");
-		lua_gettable(L, index);
-		luaL_argcheck(L, lua_islightuserdata(L, -1), -1, "'vtuber.object' expected");
-
-		//convert to pointer
-		void* temp = lua_touserdata(L, -1);
-		return (Object*)temp;
+		//return reference to object
+		return (Object*)(data->data);
 	}
 
 	//create object from pointer as light userdata
 	void create_object(lua_State* L, Object* data)
 	{
-		//assign data to table
-		lua_createtable(L, 0, 2);
+		//create new userdata and set appropriate fields
+		auto temp = new(lua_newuserdata(L, sizeof(lua_obj))) lua_obj;
+		temp->data = data;
+		temp->type = LUA_OBJ_OBJECT;
 
-		//push value
-		lua_pushstring(L, "data");
-		lua_pushlightuserdata(L, data);
-		lua_settable(L, -3);
-
-		//push type
-		lua_pushstring(L, "type");
-		lua_pushstring(L, "vtuber.object");
-		lua_settable(L, -3);
-
-		//set metatable
+		//assign metatable
 		luaL_getmetatable(L, "vtuber.object");
 		lua_setmetatable(L, -2);
-
-		//metatable will be defined later in this file
 	}
 
 	//wrapper for: bool clicked(int x, int y)
@@ -222,6 +207,10 @@ namespace lua_bindings
 		{NULL, NULL}
 	};
 
+	static const struct luaL_Reg object_global [] = {
+		{NULL, NULL}
+	};
+
 	//define metatable for object
 	int luaopen_object(lua_State* L)
 	{
@@ -229,7 +218,9 @@ namespace lua_bindings
 		lua_pushstring(L, "__index");
 		lua_pushvalue(L, -2);
 		lua_settable(L, -3);
+
 		luaL_openlib(L, NULL, object_local, 0);
+		luaL_openlib(L, "object", object_global, 0);
 		lua_pop(L, -1); //we need to pop the metatable off the stack, since lua isn't doing that for us
 		return 1;
 	}

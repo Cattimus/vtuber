@@ -212,7 +212,6 @@ int main()
 	if(lua_pcall(L, 0, 0, 0) != 0)
 	{
 		std::cout << "error running file test.lua: " << lua_tostring(L, -1) << std::endl;
-		running = false;
 	}
 
 	Script test("../src/scripts/loaded_test.lua", L);
@@ -221,7 +220,6 @@ int main()
 	if(lua_pcall(L, 0, 0, 0) != 0)
 	{
 		std::cout << "error running function check_sandbox: " << lua_tostring(L, -1) << std::endl;
-		running = false;
 	}
 	
 	while(running)
