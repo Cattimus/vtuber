@@ -2,9 +2,9 @@
 
 extern "C"
 {
-	#include "lua.h"
-	#include "lauxlib.h"
-	#include "lualib.h"
+	#include <lua.h>
+	#include <lauxlib.h>
+	#include <lualib.h>
 	#include "wrap_struct.h"
 }
 
@@ -21,9 +21,7 @@ namespace lua_bindings
 
 		//check to ensure object is not corrupted
 		bool correct_header = data->header == HEADER_DEFAULT;
-		bool correct_type = data->type == LUA_OBJ_OBJECT;
 		luaL_argcheck(L, correct_header, index, "Object is corrupted.");
-		luaL_argcheck(L, correct_type, index, "type mismatch. type should be 'vtuber.object'");
 
 		//return reference to object
 		return (Object*)(data->data);
@@ -35,7 +33,6 @@ namespace lua_bindings
 		//create new userdata and set appropriate fields
 		auto temp = new(lua_newuserdata(L, sizeof(lua_obj))) lua_obj;
 		temp->data = data;
-		temp->type = LUA_OBJ_OBJECT;
 
 		//assign metatable
 		luaL_getmetatable(L, "vtuber.object");

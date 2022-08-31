@@ -207,20 +207,14 @@ int main()
 
 	bool running = true;
 	
-	//run lua test script to see if it works
-	luaL_loadfile(L, "../src/scripts/test.lua");
-	if(lua_pcall(L, 0, 0, 0) != 0)
-	{
-		std::cout << "error running file test.lua: " << lua_tostring(L, -1) << std::endl;
-	}
-
+	Script initial("../src/scripts/test.lua", L);
 	Script test("../src/scripts/loaded_test.lua", L);
-
-	lua_getglobal(L, "check_sandbox");
-	if(lua_pcall(L, 0, 0, 0) != 0)
-	{
-		std::cout << "error running function check_sandbox: " << lua_tostring(L, -1) << std::endl;
-	}
+	test.call(L, "move_test", {});
+	initial.call(L, "check_sandbox", {});
+	initial.call(L, "add", {
+		{LUA_TNUMBER, {.number = 4}},
+		{LUA_TNUMBER, {.number = 5}}
+		});
 	
 	while(running)
 	{
