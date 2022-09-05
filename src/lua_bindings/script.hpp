@@ -34,6 +34,16 @@ private:
 		lua_pushstring(L, "get_player");
 		lua_getglobal(L, "get_player");
 		lua_settable(L, -3);
+
+		//give access to math functions
+		lua_pushstring(L, "math");
+		lua_getglobal(L, "math");
+		lua_settable(L, -3);
+
+		//give access to print (for debugging purposes)
+		lua_pushstring(L, "print");
+		lua_getglobal(L, "print");
+		lua_settable(L, -3);
 		
 		//set environment to the list of globals so it can be referenced later.
 		lua_setglobal(L, (file_path + "env").c_str());

@@ -155,7 +155,7 @@ public:
 			height = 1;
 		}
 		
-		double move_val = height * talk_height;
+		double move_val = height * talk_height * -1;
 		avatar_top->reset_position();
 
 		if(script)
@@ -165,9 +165,11 @@ public:
 			lua_bindings::create_object(script->get_state(), (Object*)avatar_bottom);
 			lua_pushnumber(script->get_state(), move_val);
 			script->call(3);
+
+			return;
 		}
 
-		avatar_top->relative_move(0, move_val * -1);
+		avatar_top->relative_move(0, move_val);
 	}
 
 	//move all entities back to origin
