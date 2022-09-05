@@ -1,11 +1,3 @@
-player = get_player()
-player:relative_move(0, -200);
-s = "this hasn't been changed"
-
-function check_sandbox()
-	print(s)
-end
-
-function add(x, y)
-	print(x+y)
+function vtuber_avatar_talk(top, bottom, val)
+	top:relative_move(0, val * 10 * -1)
 end

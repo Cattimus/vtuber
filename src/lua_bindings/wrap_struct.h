@@ -7,15 +7,3 @@ struct lua_obj
 	unsigned header = HEADER_DEFAULT;
 	void* data;
 };
-
-//struct to pass arguments to lua scripts
-struct lua_arg
-{
-	int type;
-	union Data
-	{
-		bool boolean;
-		double number;
-		const char* string;
-	}data;
-};

@@ -2,6 +2,7 @@
 
 #include <SDL.h>
 #include "globals.hpp"
+#include "lua_bindings/script.hpp"
 
 class Object
 {
@@ -9,6 +10,7 @@ protected:
 	//translation data
 	SDL_Rect origin;
 	SDL_Rect offset;
+	Script* script;
 
 public:
 	explicit Object(SDL_Rect size)
@@ -23,6 +25,24 @@ public:
 		this->offset.h = size.h;
 		this->origin.w = offset.w;
 		this->origin.h = offset.h;
+
+		this->script = NULL;
+	}
+
+	Object(SDL_Rect size, Script* script)
+	{
+		origin.x = size.x;
+		origin.y = size.y;
+
+		offset.x = 0;
+		offset.y = 0;
+
+		this->offset.w = size.w;
+		this->offset.h = size.h;
+		this->origin.w = offset.w;
+		this->origin.h = offset.h;
+
+		this->script = script;
 	}
 
 	//copy constructor
@@ -102,6 +122,11 @@ public:
 	{
 		offset.x = 0;
 		offset.y = 0;
+	}
+
+	void set_script(Script* script)
+	{
+		this->script = script;
 	}
 	
 	//update origin

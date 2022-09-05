@@ -4,6 +4,7 @@
 #include "object.hpp"
 #include "texture.hpp"
 #include "entity.hpp"
+#include "lua_bindings/object_binding.hpp"
 #include <SDL.h>
 
 //TODO - tie an entity to another entity (accessories)
@@ -138,6 +139,8 @@ public:
 	//move top jaw
 	void talk(double height)
 	{
+		//get references to top and bottom object
+		//send to script
 		if(!is_split)
 		{
 			return;
@@ -154,6 +157,16 @@ public:
 		
 		double move_val = height * talk_height;
 		avatar_top->reset_position();
+
+		if(script)
+		{
+			script->load_function("vtuber_avatar_talk");
+			lua_bindings::create_object(script->get_state(), (Object*)avatar_top);
+			lua_bindings::create_object(script->get_state(), (Object*)avatar_bottom);
+			lua_pushnumber(script->get_state(), move_val);
+			script->call(3);
+		}
+
 		avatar_top->relative_move(0, move_val * -1);
 	}
 

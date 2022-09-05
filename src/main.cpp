@@ -216,14 +216,8 @@ int main()
 	mic_input voice;
 	
 	//load test scripts
-	Script initial("../src/scripts/test.lua", L);
-	Script test("../src/scripts/loaded_test.lua", L);
-	test.call(L, "move_test", {});
-	initial.call(L, "check_sandbox", {});
-	initial.call(L, "add", {
-		{LUA_TNUMBER, {.number = 4}},
-		{LUA_TNUMBER, {.number = 5}}
-		});
+	Script test("../src/scripts/test.lua", L);
+	player->set_script(&test);
 	
 	//main loop
 	bool running = true;

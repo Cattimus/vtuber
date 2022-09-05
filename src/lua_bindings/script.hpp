@@ -16,6 +16,7 @@ class Script
 {
 private:
 	std::string file_path;
+	std::string last_called;
 	lua_State* L;
 
 	//create a new environment and set it in globals
@@ -59,6 +60,7 @@ private:
 	void get_function(std::string function_name)
 	{
 		get_environment();
+		last_called = function_name;
 		lua_getfield(L, -1, function_name.c_str());
 		if(!lua_isfunction(L, -1))
 		{
@@ -91,34 +93,26 @@ public:
 		}
 	}
 	
-	//call function
-	void call(lua_State* L, std::string function_name, std::vector<lua_arg> args)
+	void load_function(std::string function_name)
 	{
 		get_function(function_name);
+	}
 
-		//push arguments to stack. this is how they are passed to lua functions
-		for(size_t i = 0; i < args.size(); i++)
+	//call function
+	int call(int arg_count)
+	{
+		if(lua_pcall(L, arg_count, 0, 0) != 0)
 		{
-			lua_arg* temp = &args[i];
-			switch(temp->type)
-			{
-				case LUA_TBOOLEAN:
-					lua_pushboolean(L, temp->data.boolean);
-				break;
-
-				case LUA_TNUMBER:
-					lua_pushnumber(L, temp->data.number);
-				break;
-
-				case LUA_TSTRING:
-					lua_pushstring(L, temp->data.string);
-				break;
-			}
+			std::cout << "Script.call(): call to function " << last_called << " has failed. " << lua_error(L) << "\n";
+			return 0;
 		}
 
-		if(lua_pcall(L, args.size(), 0, 0) != 0)
-		{
-			std::cout << "Script.call(): call to function " << function_name << " has failed. " << lua_error(L) << "\n";
-		}
+		//successful call
+		return 1;
+	}
+
+	lua_State* get_state()
+	{
+		return L;
 	}
 };
