@@ -1,4 +1,4 @@
-function vtuber_avatar_talk(top, scale)
+function vtuber_avatar_talk(top, bottom, scale)
 	max_height = 150
 	max_width = 50
 	max_rotation = 12.5 --rotation in degrees

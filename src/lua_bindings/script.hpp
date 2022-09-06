@@ -55,35 +55,6 @@ private:
 		lua_getglobal(L, (file_path + "env").c_str());
 	}
 
-	//set function at top of stack to execute in environment
-	void set_environment()
-	{
-		get_environment();
-
-		if(!lua_setfenv(L, -2))
-		{
-			std::cout << "Script: sanboxing has failed. " << file_path << " will be running in the global namespace with no restrictions." << std::endl;
-		}
-	}
-
-	//get function from the script's environment
-	void get_function(std::string function_name)
-	{
-		get_environment();
-		last_called = function_name;
-		lua_getfield(L, -1, function_name.c_str());
-		if(!lua_isfunction(L, -1))
-		{
-			std::cout << "Script.call(): " << function_name << " is not a defined function. " << lua_type(L, -1) << "\n";
-			lua_pop(L, -1);
-			lua_pop(L, -1);
-			return;
-		}
-
-		//set script to execute in sandbox
-		set_environment();
-	}
-
 public:
 
 	Script(std::string path, lua_State* L)
@@ -96,7 +67,14 @@ public:
 
 		//load script values to environment
 		luaL_loadfile(L, path.c_str());
-		set_environment(); 
+		get_environment();
+
+		//set script to execute in sandbox
+		if(!lua_setfenv(L, -2))
+		{
+			std::cout << "Script: sanboxing has failed. " << file_path << " will be running in the global namespace with no restrictions." << std::endl;
+		}
+		
 		if(lua_pcall(L, 0, 0, 0) != 0)
 		{
 			std::cout << "error running file " << path << ": " << lua_tostring(L, -1) << std::endl;
@@ -105,7 +83,25 @@ public:
 	
 	void load_function(std::string function_name)
 	{
-		get_function(function_name);
+		get_environment();
+		last_called = function_name;
+		lua_getfield(L, -1, function_name.c_str());
+		if(!lua_isfunction(L, -1))
+		{
+			std::cout << "Script.call(): " << function_name << " is not a defined function. " << lua_type(L, -1) << "\n";
+			lua_pop(L, -1);
+			lua_pop(L, -1);
+			return;
+		}
+
+		//move function pointer below environment
+		lua_insert(L, -2);
+
+		//set script to execute in sandbox
+		if(!lua_setfenv(L, -2))
+		{
+			std::cout << "Script: sanboxing has failed. " << file_path << " will be running in the global namespace with no restrictions." << std::endl;
+		}
 	}
 
 	//call function

@@ -16,7 +16,6 @@
 
 // TODO - hot swap image while program is running
 // TODO - make an "engine" api for lua functions
-// TODO - performance difficulties in "talk" loop - possibly due to scripting performance
 
 // screen size defaults
 const unsigned int DEFAULT_WIDTH = 960;

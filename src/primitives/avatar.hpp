@@ -9,6 +9,7 @@
 
 //TODO - tie an entity to another entity (accessories)
 //TODO - implement flipping image horizontally and vertically
+//TODO - sometimes the split does not work correctly and things go a bit wonky
 
 class Avatar : public Object
 {
@@ -17,8 +18,8 @@ private:
 	SDL_Rect top_origin;
 	SDL_Rect bottom_origin;
 
-	Entity* avatar_top;
-	Entity* avatar_bottom;
+	Entity* top;
+	Entity* bottom;
 	bool is_split;
 
 	double talk_height = 100;
@@ -27,14 +28,14 @@ private:
 	void update_position()
 	{
 		SDL_Rect position = get_position();
-		if(!avatar_bottom)
+		if(!bottom)
 		{
-			avatar_top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
+			top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
 		}
 		else
 		{
-			avatar_top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
-			avatar_bottom->set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
+			top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
+			bottom->set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
 		}
 	}
 
@@ -48,8 +49,8 @@ public:
 		this->bottom_origin = (SDL_Rect){0,0, size.w, size.h};
 		
 		//avatar will initially just be the "top" entity. once split the bottom will be initialized
-		this->avatar_top = new Entity((SDL_Rect){0,0, size.w, size.h}, texture);
-		avatar_bottom = NULL;
+		this->top = new Entity((SDL_Rect){0,0, size.w, size.h}, texture);
+		bottom = NULL;
 	}
 
 	//copy constructor
@@ -68,19 +69,19 @@ public:
 		}
 
 		Object::operator=(to_copy);
-		this->avatar_top = NULL;
-		this->avatar_bottom = NULL;
+		this->top = NULL;
+		this->bottom = NULL;
 		this->is_split = false;
 		this->talk_height = to_copy.talk_height;
 
-		if(to_copy.avatar_top)
+		if(to_copy.top)
 		{
-			this->avatar_top = new Entity(*to_copy.avatar_top);
+			this->top = new Entity(*to_copy.top);
 		}
 
-		if(to_copy.avatar_bottom)
+		if(to_copy.bottom)
 		{
-			this->avatar_bottom = new Entity(*to_copy.avatar_bottom);
+			this->bottom = new Entity(*to_copy.bottom);
 			this->is_split = true;
 		}
 
@@ -89,14 +90,14 @@ public:
 
 	~Avatar()
 	{
-		if(avatar_top)
+		if(top)
 		{
-			delete avatar_top;
+			delete top;
 		}
 
-		if(avatar_bottom)
+		if(bottom)
 		{
-			delete avatar_bottom;
+			delete bottom;
 		}
 	}
 
@@ -104,14 +105,14 @@ public:
 	void draw()
 	{
 		update_position();
-		if(avatar_top)
+		if(top)
 		{
-			avatar_top->draw();
+			top->draw();
 		}
 
-		if(avatar_bottom)
+		if(bottom)
 		{
-			avatar_bottom->draw();
+			bottom->draw();
 		}
 	}
 
@@ -120,17 +121,17 @@ public:
 	{
 		if(!is_split)
 		{
-			double yoffset = y - avatar_top->get_position().y;
+			double yoffset = y - top->get_position().y;
 
 			//set origin to 0 in order to calculate properly
-			avatar_top->set_origin(0,0);
-			avatar_bottom = new Entity(*avatar_top);
+			top->set_origin(0,0);
+			bottom = new Entity(*top);
 
-			avatar_top->entity_split(yoffset, 1);
-			avatar_bottom->entity_split(yoffset, -1);
+			top->entity_split(yoffset, 1);
+			bottom->entity_split(yoffset, -1);
 
-			top_origin = avatar_top->get_origin();
-			bottom_origin = avatar_bottom->get_origin();
+			top_origin = top->get_origin();
+			bottom_origin = bottom->get_origin();
 
 			is_split = true;
 		}
@@ -139,8 +140,6 @@ public:
 	//move top jaw
 	void talk(double height)
 	{
-		//get references to top and bottom object
-		//send to script
 		if(!is_split)
 		{
 			return;
@@ -156,19 +155,19 @@ public:
 		}
 		
 		double move_val = height * talk_height * -1;
-		avatar_top->reset_position();
-
 		if(script)
 		{
 			script->load_function("vtuber_avatar_talk");
-			lua_bindings::create_object(script->get_state(), (Object*)avatar_top);
+			lua_bindings::create_object(script->get_state(), (Object*)top);
+			lua_bindings::create_object(script->get_state(), (Object*)bottom);
 			lua_pushnumber(script->get_state(), height * -1);
-			script->call(2);
+			script->call(3);
 
 			return;
 		}
 
-		avatar_top->relative_move(0, move_val);
+		top->reset_position();
+		top->relative_move(0, move_val);
 	}
 
 	//move all entities back to origin
@@ -188,5 +187,4 @@ public:
 	{
 		return talk_height;
 	}
-
 };
