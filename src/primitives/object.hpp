@@ -10,26 +10,11 @@ protected:
 	//translation data
 	SDL_Rect origin;
 	SDL_Rect offset;
+	double rotation;
+	SDL_Point rotation_axis;
 	Script* script;
 
-public:
-	explicit Object(SDL_Rect size)
-	{	
-		origin.x = size.x;
-		origin.y = size.y;
-
-		offset.x = 0;
-		offset.y = 0;
-
-		this->offset.w = size.w;
-		this->offset.h = size.h;
-		this->origin.w = offset.w;
-		this->origin.h = offset.h;
-
-		this->script = NULL;
-	}
-
-	Object(SDL_Rect size, Script* script)
+	void init(SDL_Rect& size)
 	{
 		origin.x = size.x;
 		origin.y = size.y;
@@ -41,6 +26,22 @@ public:
 		this->offset.h = size.h;
 		this->origin.w = offset.w;
 		this->origin.h = offset.h;
+
+		this->rotation_axis.x = offset.w / 2;
+		this->rotation_axis.y = offset.h / 2;
+
+		this->script = NULL;
+	}
+
+public:
+	explicit Object(SDL_Rect& size)
+	{	
+		init(size);
+	}
+
+	Object(SDL_Rect& size, Script* script)
+	{
+		init(size);
 
 		this->script = script;
 	}
@@ -63,6 +64,8 @@ public:
 		//copy data
 		this->origin = to_copy.origin;
 		this->offset = to_copy.offset;
+		this->rotation = to_copy.rotation;
+		this->script = to_copy.script;
 
 		return *this;
 	}
@@ -96,6 +99,39 @@ public:
 		return offset.y;
 	}
 
+	double get_rotation()
+	{
+		return rotation;
+	}
+
+	void set_rotation(double rot)
+	{
+		rotation = rot;
+	}
+
+	//argument should be a value between 0 and 1 for x and y
+	void set_rotation_axis(double x, double y)
+	{
+		rotation_axis.x = offset.w * x;
+		rotation_axis.y = offset.h * y;
+
+		if(rotation_axis.x > offset.w)
+		{
+			rotation_axis.x = offset.w;
+		}
+
+		if(rotation_axis.y > offset.h)
+		{
+			rotation_axis.y = offset.h;
+		}
+	}
+
+	void set_rotation_axis_pixels(double x, double y)
+	{
+		rotation_axis.x = x;
+		rotation_axis.y = y;
+	}
+
 	//calculate position (origin + offset)
 	SDL_Rect get_position()
 	{
@@ -124,13 +160,18 @@ public:
 		offset.y = 0;
 	}
 
+	void reset_rotation()
+	{
+		rotation = 0;
+	}
+
 	void set_script(Script* script)
 	{
 		this->script = script;
 	}
 	
 	//update origin
-	void set_origin(SDL_Rect new_origin)
+	void set_origin(SDL_Rect& new_origin)
 	{
 		origin = new_origin;
 	}

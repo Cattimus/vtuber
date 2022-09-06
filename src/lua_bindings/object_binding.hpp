@@ -55,6 +55,28 @@ namespace lua_bindings
 		return 1;
 	}
 
+	//wrapper for: double get_rotation()
+	int object_getrot(lua_State* L)
+	{
+		Object* obj = get_object(L, 1);
+		double rot = obj->get_rotation();
+		lua_pushnumber(L, rot);
+		return 1;
+	}
+
+	//wrapper for: void set_rotation_axis()
+	int object_setrot_axis(lua_State* L)
+	{
+		Object* obj = get_object(L, 1);
+		luaL_argcheck(L, lua_isnumber(L, 2), 2, "'number' expected");
+		luaL_argcheck(L, lua_isnumber(L, 3), 3, "'number' expected");
+		double x = lua_tonumber(L, 2);
+		double y = lua_tonumber(L, 3);
+
+		obj->set_rotation_axis(x, y);
+		return 0;
+	}
+
 	//wrapper for: double get_width()
 	int object_getw(lua_State* L)
 	{
@@ -71,6 +93,14 @@ namespace lua_bindings
 		double h = obj->get_height();
 		lua_pushnumber(L, h);
 		return 1;
+	}
+
+	//wrapper for: void reset_rotation()
+	int object_reset_rot(lua_State* L)
+	{
+		Object* obj = get_object(L, 1);
+		obj->reset_rotation();
+		return 0;
 	}
 
 	//wrapper for: void reset_position()
@@ -118,6 +148,18 @@ namespace lua_bindings
 		lua_pushnumber(L, temp.w);
 		lua_pushnumber(L, temp.h);
 		return 4;
+	}
+
+	//wrapper for: void set_rotation(rot)
+	int object_setrot(lua_State* L)
+	{
+		Object* obj = get_object(L, 1);
+		luaL_argcheck(L, lua_isnumber(L, 2), 2, "'number' expected");
+
+		double rot = lua_tonumber(L, 2);
+
+		obj->set_rotation(rot);
+		return 0;
 	}
 
 	//wrapper for: void set_origin(x, y)
@@ -195,9 +237,13 @@ namespace lua_bindings
 		{"get_position", object_get_pos},
 		{"get_origin", object_get_origin},
 		{"get_offset", object_get_offset},
+		{"get_rotation", object_getrot},
 		{"reset_position", object_reset_pos},
+		{"reset_rotation", object_reset_rot},
 		{"set_origin", object_set_origin},
 		{"set_offset", object_set_offset},
+		{"set_rotation", object_setrot},
+		{"set_rotation_axis", object_setrot_axis},
 		{"move_to", object_move_to},
 		{"relative_move", object_relative_move},
 		{"print_position", object_print_position},

@@ -162,9 +162,8 @@ public:
 		{
 			script->load_function("vtuber_avatar_talk");
 			lua_bindings::create_object(script->get_state(), (Object*)avatar_top);
-			lua_bindings::create_object(script->get_state(), (Object*)avatar_bottom);
-			lua_pushnumber(script->get_state(), move_val);
-			script->call(3);
+			lua_pushnumber(script->get_state(), height * -1);
+			script->call(2);
 
 			return;
 		}

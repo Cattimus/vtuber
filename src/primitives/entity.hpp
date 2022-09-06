@@ -81,7 +81,8 @@ public:
 	void draw()
 	{
 		SDL_Rect position = get_position();
-		SDL_RenderCopy(renderer, texture->get_tex(), &texture_coords, &position);
+		//SDL_RenderCopy(renderer, texture->get_tex(), &texture_coords, &position);
+		SDL_RenderCopyEx(renderer, texture->get_tex(), &texture_coords, &position, rotation, &rotation_axis, SDL_FLIP_NONE);
 	}
 	
 };
