@@ -24,11 +24,32 @@ protected:
 
 		this->offset.w = size.w;
 		this->offset.h = size.h;
-		this->origin.w = offset.w;
-		this->origin.h = offset.h;
+		this->origin.w = size.w;
+		this->origin.h = size.h;
 
-		this->rotation_axis.x = offset.w / 2;
-		this->rotation_axis.y = offset.h / 2;
+		this->rotation_axis.x = size.w / 2;
+		this->rotation_axis.y = size.h / 2;
+		rotation = 0;
+
+		this->script = NULL;
+	}
+
+	void init(int w, int h)
+	{
+		origin.x = 0;
+		origin.y = 0;
+
+		offset.x = 0;
+		offset.y = 0;
+
+		this->offset.w = w;
+		this->offset.h = h;
+		this->origin.w = w;
+		this->origin.h = h;
+
+		this->rotation_axis.x = w / 2;
+		this->rotation_axis.y = h / 2;
+		rotation = 0;
 
 		this->script = NULL;
 	}
@@ -37,6 +58,18 @@ public:
 	explicit Object(SDL_Rect& size)
 	{	
 		init(size);
+	}
+
+	Object(int w, int h)
+	{
+		init(w, h);
+	}
+
+	Object(int w, int h, Script* script)
+	{
+		init(w, h);
+
+		this->script = script;
 	}
 
 	Object(SDL_Rect& size, Script* script)
@@ -65,6 +98,7 @@ public:
 		this->origin = to_copy.origin;
 		this->offset = to_copy.offset;
 		this->rotation = to_copy.rotation;
+		this->rotation_axis = to_copy.rotation_axis;
 		this->script = to_copy.script;
 
 		return *this;
@@ -130,6 +164,11 @@ public:
 	{
 		rotation_axis.x = x;
 		rotation_axis.y = y;
+	}
+
+	SDL_Point get_rotation_axis()
+	{
+		return rotation_axis;
 	}
 
 	//calculate position (origin + offset)

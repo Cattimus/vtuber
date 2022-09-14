@@ -7,9 +7,7 @@
 #include "lua_bindings/object_binding.hpp"
 #include <SDL.h>
 
-//TODO - tie an entity to another entity (accessories)
 //TODO - implement flipping image horizontally and vertically
-//TODO - sometimes the split does not work correctly and things go a bit wonky
 
 class Avatar : public Object
 {
@@ -28,7 +26,7 @@ private:
 	void update_position()
 	{
 		SDL_Rect position = get_position();
-		if(!bottom)
+		if(!is_split)
 		{
 			top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
 		}
@@ -105,12 +103,9 @@ public:
 	void draw()
 	{
 		update_position();
-		if(top)
-		{
-			top->draw();
-		}
 
-		if(bottom)
+		top->draw();
+		if(is_split)
 		{
 			bottom->draw();
 		}
@@ -135,6 +130,16 @@ public:
 
 			is_split = true;
 		}
+	}
+
+	Object* get_top()
+	{
+		return (Object*)top;
+	}
+
+	Object* get_bottom()
+	{
+		return (Object*)bottom;
 	}
 
 	//move top jaw
