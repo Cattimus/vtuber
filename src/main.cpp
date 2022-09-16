@@ -206,12 +206,18 @@ int main()
 
 	delta = &delta_val;
 	player_tex = new Texture("../assets/catt_transparent.png");
+	Texture* hat_tex = new Texture("../assets/tophat.png");
 	player = new Avatar((SDL_Rect){(int)(screen_height * 0.25),
 								   (int)(screen_height * 0.25), 
 								   (int)(screen_width  * 0.75), 
 								   (int)(screen_height * 0.75)}, 
 								   player_tex);
 
+	auto hat = new Entity(500, 200, hat_tex);
+	hat->clamp_to(player->get_top());
+	hat->set_offset(175, -70);
+	hat->flip_horizontal();
+			
 	// audio input from microphone
 	mic_input voice;
 	
@@ -223,14 +229,14 @@ int main()
 	bool running = true;
 	while(running)
 	{
-		handle_input(running);
-
 		SDL_RenderClear(renderer);
+		handle_input(running);
 		if (player)
 		{
 			// draw objects with textures
 			player->talk(voice.get());
 			player->draw();
+			hat->draw();
 		}
 		SDL_RenderPresent(renderer);
 	}
@@ -238,6 +244,7 @@ int main()
 	// clean up memory
 	delete player;
 	delete player_tex;
+	delete hat_tex;
 
 	//clean up libraries
 	quit_sdl();

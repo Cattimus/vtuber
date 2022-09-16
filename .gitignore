@@ -4,3 +4,4 @@
 /libs
 /shaders
 compile_commands.json
+/.clangd
