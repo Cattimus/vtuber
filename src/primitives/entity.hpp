@@ -75,6 +75,9 @@ public:
 		this->texture = to_copy.texture;
 		this->texture_coords = to_copy.texture_coords;
 		this->clamp = to_copy.clamp;
+		this->flipval = to_copy.flipval;
+		this->h_flip = to_copy.h_flip;
+		this->v_flip = to_copy.v_flip;
 		return *this;
 	}
 

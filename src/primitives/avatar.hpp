@@ -7,8 +7,6 @@
 #include "lua_bindings/object_binding.hpp"
 #include <SDL.h>
 
-//TODO - implement flipping image horizontally and vertically
-
 class Avatar : public Object
 {
 private:
@@ -191,5 +189,31 @@ public:
 	double get_talk_height()
 	{
 		return talk_height;
+	}
+
+	void flip_horizontal()
+	{
+		if(is_split)
+		{
+			top->flip_horizontal();
+			bottom->flip_horizontal();
+		}
+		else
+		{
+			top->flip_horizontal();
+		}
+	}
+
+	void flip_vertical()
+	{
+		if(is_split)
+		{
+			top->flip_vertical();
+			bottom->flip_vertical();
+		}
+		else
+		{
+			top->flip_vertical();
+		}
 	}
 };
