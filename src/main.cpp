@@ -84,6 +84,8 @@ bool init_sdl()
 		std::cout << "SDL window creation failed" << std::endl;
 		return false;
 	}
+
+	//create screen and renderer
 	screen = SDL_GetWindowSurface(window);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if(!renderer)
@@ -91,6 +93,7 @@ bool init_sdl()
 		std::cout << "SDL Renderer creation failed" << std::endl;
 		return false;
 	}
+	
 	SDL_SetRenderDrawColor(renderer, 51, 51, 77, 0xFF);
 
 	return true;
@@ -205,13 +208,18 @@ int main()
 	}
 
 	delta = &delta_val;
+
+	//load textures
 	player_tex = new Texture("../assets/catt_transparent.png");
 	Texture* hat_tex = new Texture("../assets/tophat.png");
-	player = new Avatar((SDL_Rect){(int)(screen_height * 0.25),
-								   (int)(screen_height * 0.25), 
-								   (int)(screen_width  * 0.75), 
-								   (int)(screen_height * 0.75)}, 
-								   player_tex);
+
+	//load objects
+	player = new Avatar((SDL_Rect){
+			    (int)(screen_height * 0.25),
+				(int)(screen_height * 0.25), 
+				(int)(screen_width  * 0.75), 
+				(int)(screen_height * 0.75)},
+		player_tex);
 
 	auto hat = new Entity(500, 200, hat_tex);
 	hat->clamp_to(player->get_top());

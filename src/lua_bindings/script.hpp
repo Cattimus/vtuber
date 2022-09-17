@@ -57,6 +57,7 @@ private:
 
 public:
 
+	//path is the path to the script. L is a reference to the current lua state.
 	Script(std::string path, lua_State* L)
 	{
 		file_path = path;
@@ -74,13 +75,15 @@ public:
 		{
 			std::cout << "Script: sanboxing has failed. " << file_path << " will be running in the global namespace with no restrictions." << std::endl;
 		}
-		
+
+		//execute lua file to define globals in the sandbox
 		if(lua_pcall(L, 0, 0, 0) != 0)
 		{
 			std::cout << "error running file " << path << ": " << lua_tostring(L, -1) << std::endl;
 		}
 	}
-	
+
+	//load function and push it to the lua stack. This should be called first when executing a function. Arguments should be pushed to the stack next.
 	void load_function(std::string function_name)
 	{
 		get_environment();
@@ -104,7 +107,7 @@ public:
 		}
 	}
 
-	//call function
+	//call function. This should be called after load_function() and pushing arguments to the stack.
 	int call(int arg_count)
 	{
 		if(lua_pcall(L, arg_count, 0, 0) != 0)
@@ -117,6 +120,7 @@ public:
 		return 1;
 	}
 
+	//return a reference to the lua_state the script has been created under.
 	lua_State* get_state()
 	{
 		return L;

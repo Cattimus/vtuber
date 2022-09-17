@@ -48,6 +48,4 @@ public:
 	{
 		return texture;
 	}
-
-
 };

@@ -60,11 +60,13 @@ public:
 		init(size);
 	}
 
+	//w = width. h = height
 	Object(int w, int h)
 	{
 		init(w, h);
 	}
 
+	//w = width. h = height. script is a lua script object
 	Object(int w, int h, Script* script)
 	{
 		init(w, h);
@@ -72,20 +74,19 @@ public:
 		this->script = script;
 	}
 
+	//size is an SDL_Rect that contains x, y, w, h. script is a lua script object
 	Object(SDL_Rect& size, Script* script)
 	{
 		init(size);
 
 		this->script = script;
 	}
-
-	//copy constructor
+	
 	Object(const Object& to_copy)
 	{
 		*this = to_copy;
 	}
 
-	//overload assignment operator
 	Object& operator=(const Object& to_copy)
 	{
 		//self assignment gaurd
@@ -143,7 +144,7 @@ public:
 		rotation = rot;
 	}
 
-	//argument should be a value between 0 and 1 for x and y
+	//argument will be between 0 and 1. This will calculate to a point inside the object.
 	void set_rotation_axis(double x, double y)
 	{
 		rotation_axis.x = offset.w * x;
@@ -160,18 +161,20 @@ public:
 		}
 	}
 
+	//argument will be x and y coordinates in screen space pixels
 	void set_rotation_axis_pixels(double x, double y)
 	{
 		rotation_axis.x = x;
 		rotation_axis.y = y;
 	}
 
+	//returns the current rotation axis
 	SDL_Point get_rotation_axis()
 	{
 		return rotation_axis;
 	}
 
-	//calculate position (origin + offset)
+	//return the current location on the screen of the object (origin + position)
 	SDL_Rect get_position()
 	{
 		SDL_Rect output;
@@ -181,7 +184,7 @@ public:
 		output.h = offset.h;
 		return output;
 	}
-	
+
 	SDL_Rect get_origin()
 	{
 		return origin;
@@ -199,28 +202,32 @@ public:
 		offset.y = 0;
 	}
 
+	//reset rotation to 0 degrees
 	void reset_rotation()
 	{
 		rotation = 0;
 	}
 
+	//assign an already loaded script to the object
 	void set_script(Script* script)
 	{
 		this->script = script;
 	}
 	
-	//update origin
+	//update origin values
 	void set_origin(SDL_Rect& new_origin)
 	{
 		origin = new_origin;
 	}
+
+	//update origin values (x and y)
 	void set_origin(double x, double y)
 	{
 		origin.x = x;
 		origin.y = y;
 	}
 
-	//set offset to an absolute value
+	//update offset values
 	void set_offset(double x, double y)
 	{
 		offset.x = x;

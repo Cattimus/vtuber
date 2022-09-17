@@ -12,6 +12,7 @@ extern "C"
 
 namespace lua_bindings
 {
+	//get a pointer to the object stored at argument index
 	Object* get_object(lua_State* L, int index)
 	{
 		//check object is userdata
@@ -27,7 +28,7 @@ namespace lua_bindings
 		return (Object*)(data->data);
 	}
 
-	//create object from pointer as light userdata
+	//create object from pointer as light userdata. data is a pointer to the object to be converted.
 	void create_object(lua_State* L, Object* data)
 	{
 		//create new userdata and set appropriate fields
@@ -230,7 +231,7 @@ namespace lua_bindings
 		return 0;
 	}
 
-	//define object methods
+	//define object methods for lua
 	static const struct luaL_Reg object_local [] = {
 		{"get_width", object_getw},
 		{"get_height", object_geth},
@@ -250,7 +251,7 @@ namespace lua_bindings
 		{NULL, NULL}
 	};
 	
-	//define object global methods (empty because we will be using only references)
+	//define object global methods (empty because we will be using only references not userdata)
 	static const struct luaL_Reg object_global [] = {
 		{NULL, NULL}
 	};

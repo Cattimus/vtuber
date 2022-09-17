@@ -7,7 +7,7 @@
 class Console
 {
 private:
-	std::thread input_thread;
+	std::thread input_thread; //thread that will handle IO
 
 public:
 	

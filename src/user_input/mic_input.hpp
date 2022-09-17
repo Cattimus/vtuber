@@ -62,7 +62,7 @@ private:
 				r_total += (r * r);
 			}
 
-			//calculate value in DB
+			//calculate value from sample to db
 			double RMS_l = sqrt(l_total / ((double)buf_size / 4));
 			double RMS_r = sqrt(r_total / ((double)buf_size / 4));
 
@@ -80,7 +80,7 @@ private:
 		
 	}
 
-	//initialize pulseaudio. runs when the class is instantialized
+	//initialize pulseaudio. runs when the class is instantiated
 	void initialize()
 	{
 		//specification for pulseaudio, 44100hz 2 channel 16-bit little endian PCM

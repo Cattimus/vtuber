@@ -26,6 +26,7 @@ protected:
 		flipval = SDL_FLIP_NONE;
 	}
 
+	//calculate the appropriate flipping flag for sdl
 	void set_flip()
 	{
 		if(v_flip && h_flip)
@@ -57,13 +58,11 @@ public:
 		init(texture);
 	}
 
-	//copy constructor
 	Entity(const Entity& to_copy) : Object(to_copy)
 	{
 		*this = to_copy;
 	}
 
-	//assignment operator
 	Entity& operator=(const Entity& to_copy)
 	{
 		if(this == &to_copy)
@@ -81,7 +80,7 @@ public:
 		return *this;
 	}
 
-	//split the object into two rectangles at position y
+	//split the object into two rectangles at vertical position y
 	void entity_split(double y, int position)
 	{
 		SDL_Rect curpos = get_position();
@@ -144,7 +143,8 @@ public:
 		rotation_axis = to->get_rotation_axis();
 		rotation = to->get_rotation();
 	}
-	
+
+	//draw object on the screen
 	void draw()
 	{
 		//algorithm to follow the top

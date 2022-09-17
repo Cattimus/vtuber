@@ -14,11 +14,15 @@ private:
 	SDL_Rect top_origin;
 	SDL_Rect bottom_origin;
 
+	//entities for top and bottom
 	Entity* top;
 	Entity* bottom;
+
+	//flag to see if value is split or not
 	bool is_split;
 
-	double talk_height = 100;
+	//default talk height value
+	double talk_height;
 
 	//move both sub-objects by their origins in respect to the parent object. This means they can move freely when talking
 	void update_position()
@@ -36,8 +40,6 @@ private:
 	}
 
 public:
-
-	//create new (unsplit) avatar
 	Avatar(SDL_Rect size, Texture* texture) : Object(size)
 	{
 		this->is_split = false;
@@ -47,15 +49,14 @@ public:
 		//avatar will initially just be the "top" entity. once split the bottom will be initialized
 		this->top = new Entity((SDL_Rect){0,0, size.w, size.h}, texture);
 		bottom = NULL;
+		talk_height = 100;
 	}
 
-	//copy constructor
 	Avatar(const Avatar& to_copy) : Object(to_copy)
 	{
 		*this = to_copy;
 	}
 
-	//assignment operator (copy values)
 	Avatar& operator=(const Avatar& to_copy)
 	{
 		//self assignment guard
@@ -97,7 +98,7 @@ public:
 		}
 	}
 
-	//draw values to screen
+	//draw object to the screen
 	void draw()
 	{
 		update_position();
@@ -109,7 +110,7 @@ public:
 		}
 	}
 
-	//split the avatar along the selected line
+	//split the avatar along the horizontal line at position y
 	void avatar_split(double y)
 	{
 		if(!is_split)
@@ -120,9 +121,11 @@ public:
 			top->set_origin(0,0);
 			bottom = new Entity(*top);
 
+			//split avatar
 			top->entity_split(yoffset, 1);
 			bottom->entity_split(yoffset, -1);
 
+			//make a copy of the values
 			top_origin = top->get_origin();
 			bottom_origin = bottom->get_origin();
 
@@ -130,11 +133,13 @@ public:
 		}
 	}
 
+	//get a reference to the top object
 	Object* get_top()
 	{
 		return (Object*)top;
 	}
 
+	//get a reference to the bottom object
 	Object* get_bottom()
 	{
 		return (Object*)bottom;
@@ -158,6 +163,8 @@ public:
 		}
 		
 		double move_val = height * talk_height * -1;
+
+		//if a script has been defined, call the talk function here
 		if(script)
 		{
 			script->load_function("vtuber_avatar_talk");
@@ -173,7 +180,7 @@ public:
 		top->relative_move(0, move_val);
 	}
 
-	//move all entities back to origin
+	//reset object to origin
 	void reset_position()
 	{	
 		offset.x = 0;
@@ -191,6 +198,7 @@ public:
 		return talk_height;
 	}
 
+	//flip the top and bottom horizontally
 	void flip_horizontal()
 	{
 		if(is_split)
@@ -204,6 +212,7 @@ public:
 		}
 	}
 
+	//flip the top and bottom vertically
 	void flip_vertical()
 	{
 		if(is_split)
