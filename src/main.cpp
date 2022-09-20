@@ -6,6 +6,7 @@
 //C++ includes
 #include <vector>
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
 // local file includes
@@ -19,8 +20,13 @@ using namespace std;
 #include "lua_bindings/object_binding.hpp"
 #include "lua_bindings/script.hpp"
 
-// TODO - hot swap image while program is running
-// TODO - make an "engine" api for lua functions
+//lua global functions and lua includes
+extern "C"
+{
+	#include <lua.h>
+	#include <lauxlib.h>
+	#include <lualib.h>
+}
 
 // screen size defaults
 const unsigned int DEFAULT_WIDTH = 960;
@@ -41,26 +47,99 @@ vector<Entity> entities;   //all instances of entity
 vector<Script> scripts;	   //all instances of script
 vector<Texture> textures;  //all instances of texture
 
-//lua global functions and lua includes
+//function declarations
+bool init_sdl();
+void init_lua();
+void quit_sdl();
+void add_drawlist(Object* to_add);
+void handle_input(bool& running);
+
 extern "C"
 {
-	#include <lua.h>
-	#include <lauxlib.h>
-	#include <lualib.h>
+	static int get_player(lua_State* L);
+}
 
-	//return a reference to the player object for manipulation by lua scripts
-	static int get_player(lua_State* L)
+// TODO - hot swap image while program is running
+// TODO - make an "engine" api for lua functions
+int main()
+{
+	if(!init_sdl()) {return 0;}
+	delta = &delta_val;
+	init_lua();
+
+	//load textures
+	textures.push_back(Texture("../assets/catt_transparent.png"));
+	textures.push_back(Texture("../assets/tophat.png"));
+	textures.push_back(Texture("../assets/crep.png"));
+
+	//player object
+	avatars.push_back(
+			Avatar((SDL_Rect){
+				(int)(screen_height * 0.25),
+				(int)(screen_height * 0.25), 
+				(int)(screen_width  * 0.75), 
+				(int)(screen_height * 0.75)},
+			&textures[0]));
+	player = &avatars[0];
+	
+	//hat object
+	entities.push_back(Entity(500, 200, &textures[1]));
+	auto hat = &entities[0];
+	hat->clamp_to(player->get_top());
+	hat->set_offset(175, -70);
+	hat->flip_horizontal();
+
+	//test cat object
+	entities.push_back(Entity(500, 300, &textures[2]));	
+			
+	// audio input from microphone
+	mic voice;
+	
+	//load test scripts
+	scripts.push_back(Script("../src/scripts/test.lua", L));
+	player->set_script(&scripts[0]);
+	player->set_priority(1);
+	hat->set_priority(-1);
+	entities[1].set_priority(0);
+
+	//set drawable objects
+	for(size_t i = 0; i < avatars.size(); i++)
 	{
-		//don't return a reference if player is not initialized
-		if(!player)
+		add_drawlist((Object*)&avatars[i]);
+	}
+
+	for(size_t i = 0; i < entities.size(); i++)
+	{
+		add_drawlist((Object*)&entities[i]);
+	}
+	
+	//main loop
+	bool running = true;
+	while(running)
+	{
+		SDL_RenderClear(renderer);
+		handle_input(running);
+		
+		//perform talk operation for every avatar
+		double db = voice.get();
+		for(size_t i = 0; i < avatars.size(); i++)
 		{
-			return 0;
+			avatars[i].talk(db);
 		}
 
-		//give lua the player as converted to an object.
-		lua_bindings::create_object(L, (Object*)player);
-		return 1;
+		//draw all drawable objects
+		for(size_t i = 0; i < draw_list.size(); i++)
+		{
+			draw_list[i]->draw();
+		}
+
+		SDL_RenderPresent(renderer);
 	}
+
+	//clean up libraries
+	quit_sdl();
+	lua_close(L);
+	return 0;
 }
 
 //initialize sdl values and return the result
@@ -145,6 +224,7 @@ void quit_sdl()
 	SDL_Quit();
 }
 
+//TODO - clean up user input function
 //helper function to handle user input
 void handle_input(bool& running)
 {
@@ -212,75 +292,28 @@ void handle_input(bool& running)
 	}
 }
 
-int main()
+//return a reference to the player object for manipulation by lua scripts
+static int get_player(lua_State* L)
 {
-	if(!init_sdl()) {return 0;}
-	delta = &delta_val;
-	init_lua();
-
-	//load textures
-	textures.push_back(Texture("../assets/catt_transparent.png"));
-	textures.push_back(Texture("../assets/tophat.png"));
-
-	//load objects
-	avatars.push_back(
-			Avatar((SDL_Rect){
-				(int)(screen_height * 0.25),
-				(int)(screen_height * 0.25), 
-				(int)(screen_width  * 0.75), 
-				(int)(screen_height * 0.75)},
-			&textures[0]));
-	player = &avatars[0];
-
-	entities.push_back(Entity(500, 200, &textures[1]));
-	auto hat = &entities[0];
-	hat->clamp_to(player->get_top());
-	hat->set_offset(175, -70);
-	hat->flip_horizontal();
-			
-	// audio input from microphone
-	mic voice;
-	
-	//load test scripts
-	scripts.push_back(Script("../src/scripts/test.lua", L));
-	player->set_script(&scripts[0]);
-
-	//set drawable objects
-	for(size_t i = 0; i < avatars.size(); i++)
+	//don't return a reference if player is not initialized
+	if(!player)
 	{
-		draw_list.push_back((Object*)&avatars[i]);
+		return 0;
 	}
 
-	for(size_t i = 0; i < entities.size(); i++)
-	{
-		draw_list.push_back((Object*)&entities[i]);
-	}
-	
-	//main loop
-	bool running = true;
-	while(running)
-	{
-		SDL_RenderClear(renderer);
-		handle_input(running);
-		
-		//perform talk operation for every avatar
-		double db = voice.get();
-		for(size_t i = 0; i < avatars.size(); i++)
-		{
-			avatars[i].talk(db);
-		}
+	//give lua the player as converted to an object.
+	lua_bindings::create_object(L, (Object*)player);
+	return 1;
+}
 
-		//draw all drawable objects
-		for(size_t i = 0; i < draw_list.size(); i++)
-		{
-			draw_list[i]->draw();
-		}
+static bool comp(Object* a, Object* b)
+{
+	return a->get_priority() < b->get_priority();
+}
 
-		SDL_RenderPresent(renderer);
-	}
-
-	//clean up libraries
-	quit_sdl();
-	lua_close(L);
-	return 0;
+//add an item to the render list in priority order
+void add_drawlist(Object* to_add)
+{
+	draw_list.push_back(to_add);
+	sort(draw_list.begin(), draw_list.end(), comp);
 }

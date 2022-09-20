@@ -13,7 +13,8 @@ protected:
 	double rotation;
 	SDL_Point rotation_axis;
 	Script* script;
-	int render_priority;
+
+	int render_priority; //determines the order objects are drawn in. higher renders first
 
 	void init(SDL_Rect& size)
 	{
@@ -260,5 +261,15 @@ public:
 		std::cout << "x: " << position.x;
 		std::cout << " y: " << position.y;
 		std::cout << std::endl;
+	}
+
+	void set_priority(int val)
+	{
+		render_priority = val;
+	}
+
+	int get_priority()
+	{
+		return render_priority;
 	}
 };
