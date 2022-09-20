@@ -8,12 +8,15 @@ class Texture
 {
 private:
 	SDL_Texture* texture;
+	std::string file_path;
 	int w;
 	int h;
 
 public:
 	Texture(const char* path)
 	{
+		this->file_path = path;
+	
 		//load image from file
 		SDL_Surface* img_temp = IMG_Load(path);
 		if(!img_temp)
@@ -36,12 +39,6 @@ public:
 	int geth()
 	{
 		return h;
-	}
-
-	//clean memory
-	~Texture()
-	{
-		SDL_DestroyTexture(texture);
 	}
 
 	SDL_Texture* get_tex()

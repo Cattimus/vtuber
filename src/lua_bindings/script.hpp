@@ -60,7 +60,7 @@ public:
 	//path is the path to the script. L is a reference to the current lua state.
 	Script(std::string path, lua_State* L)
 	{
-		file_path = path;
+		this->file_path = path;
 		this->L = L;
 
 		//create a new environment for script

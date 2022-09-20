@@ -13,6 +13,7 @@ protected:
 	double rotation;
 	SDL_Point rotation_axis;
 	Script* script;
+	int render_priority;
 
 	void init(SDL_Rect& size)
 	{
@@ -32,26 +33,17 @@ protected:
 		rotation = 0;
 
 		this->script = NULL;
+
+		this->render_priority = 0;
 	}
 
 	void init(int w, int h)
 	{
-		origin.x = 0;
-		origin.y = 0;
+		SDL_Rect temp;
+		temp.w = w;
+		temp.h = h;
 
-		offset.x = 0;
-		offset.y = 0;
-
-		this->offset.w = w;
-		this->offset.h = h;
-		this->origin.w = w;
-		this->origin.h = h;
-
-		this->rotation_axis.x = w / 2;
-		this->rotation_axis.y = h / 2;
-		rotation = 0;
-
-		this->script = NULL;
+		init(temp);
 	}
 
 public:
@@ -103,6 +95,12 @@ public:
 		this->script = to_copy.script;
 
 		return *this;
+	}
+	
+	//draw function that can be overridden by child classes
+	virtual void draw()
+	{
+		return;
 	}
 
 	//AABB collision detection
@@ -259,5 +257,10 @@ public:
 		std::cout << "x: " << position.x;
 		std::cout << " y: " << position.y;
 		std::cout << std::endl;
+	}
+
+	virtual ~Object()
+	{
+
 	}
 };

@@ -3,6 +3,11 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
+//C++ includes
+#include <vector>
+#include <iostream>
+using namespace std;
+
 // local file includes
 #include "primitives/texture.hpp"
 #include "primitives/object.hpp"
@@ -30,6 +35,14 @@ lua_State* L;
 double cursor_offset_x;
 double cursor_offset_y;
 
+//rendering vectors
+vector<Object*> draw_list; //list of drawable objects
+vector<Avatar> avatars;    //all instances of avatar
+vector<Entity> entities;   //all instances of entity
+vector<Script> scripts;	   //all instances of script
+vector<Texture> textures;  //all instances of texture
+
+//lua global functions and lua includes
 extern "C"
 {
 	#include <lua.h>
@@ -210,18 +223,21 @@ int main()
 	delta = &delta_val;
 
 	//load textures
-	player_tex = new Texture("../assets/catt_transparent.png");
-	Texture* hat_tex = new Texture("../assets/tophat.png");
+	textures.push_back(Texture("../assets/catt_transparent.png"));
+	textures.push_back(Texture("../assets/tophat.png"));
 
 	//load objects
-	player = new Avatar((SDL_Rect){
+	avatars.push_back(Avatar((SDL_Rect){
 			    (int)(screen_height * 0.25),
 				(int)(screen_height * 0.25), 
 				(int)(screen_width  * 0.75), 
 				(int)(screen_height * 0.75)},
-		player_tex);
+		&textures[0]));
 
-	auto hat = new Entity(500, 200, hat_tex);
+	player = &avatars[0];
+
+	entities.push_back(Entity(500, 200, &textures[1]));
+	auto hat = &entities[0];
 	hat->clamp_to(player->get_top());
 	hat->set_offset(175, -70);
 	hat->flip_horizontal();
@@ -230,8 +246,19 @@ int main()
 	mic_input voice;
 	
 	//load test scripts
-	Script test("../src/scripts/test.lua", L);
-	player->set_script(&test);
+	scripts.push_back(Script("../src/scripts/test.lua", L));
+	player->set_script(&scripts[0]);
+
+	//set drawable objects
+	for(size_t i = 0; i < avatars.size(); i++)
+	{
+		draw_list.push_back((Object*)&avatars[i]);
+	}
+
+	for(size_t i = 0; i < entities.size(); i++)
+	{
+		draw_list.push_back((Object*)&entities[i]);
+	}
 	
 	//main loop
 	bool running = true;
@@ -239,20 +266,22 @@ int main()
 	{
 		SDL_RenderClear(renderer);
 		handle_input(running);
-		if (player)
+		
+		//perform talk operation for every avatar
+		double db = voice.get();
+		for(size_t i = 0; i < avatars.size(); i++)
 		{
-			// draw objects with textures
-			player->talk(voice.get());
-			player->draw();
-			hat->draw();
+			avatars[i].talk(db);
 		}
+
+		//draw all drawable objects
+		for(size_t i = 0; i < draw_list.size(); i++)
+		{
+			draw_list[i]->draw();
+		}
+
 		SDL_RenderPresent(renderer);
 	}
-
-	// clean up memory
-	delete player;
-	delete player_tex;
-	delete hat_tex;
 
 	//clean up libraries
 	quit_sdl();
