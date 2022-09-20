@@ -15,8 +15,8 @@ private:
 	SDL_Rect bottom_origin;
 
 	//entities for top and bottom
-	Entity* top;
-	Entity* bottom;
+	Entity top;
+	Entity bottom;
 
 	//flag to see if value is split or not
 	bool is_split;
@@ -28,28 +28,25 @@ private:
 	void update_position()
 	{
 		SDL_Rect position = get_position();
-		if(!is_split)
+
+		top.set_origin(top_origin.x + position.x, top_origin.y + position.y);
+		if(is_split)
 		{
-			top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
-		}
-		else
-		{
-			top->set_origin(top_origin.x + position.x, top_origin.y + position.y);
-			bottom->set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
+			bottom.set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
 		}
 	}
 
 public:
 	Avatar(SDL_Rect size, Texture* texture) : Object(size)
 	{
-		this->is_split = false;
-		this->top_origin = (SDL_Rect){0,0, size.w, size.h};
-		this->bottom_origin = (SDL_Rect){0,0, size.w, size.h};
-		
-		//avatar will initially just be the "top" entity. once split the bottom will be initialized
-		this->top = new Entity((SDL_Rect){0,0, size.w, size.h}, texture);
-		bottom = NULL;
+		//initialize our entities
+		top = Entity((SDL_Rect){0,0,size.w,size.h}, texture);
+		bottom = Entity((SDL_Rect){0,0,size.w,size.h}, texture);
+
 		talk_height = 100;
+		is_split = false;
+		top_origin = (SDL_Rect){0,0,size.w,size.h};
+		bottom_origin = (SDL_Rect){0,0,size.w,size.h};
 	}
 
 	Avatar(const Avatar& to_copy) : Object(to_copy)
@@ -64,38 +61,17 @@ public:
 		{
 			return *this;
 		}
-
 		Object::operator=(to_copy);
-		this->top = NULL;
-		this->bottom = NULL;
-		this->is_split = false;
-		this->talk_height = to_copy.talk_height;
 
-		if(to_copy.top)
-		{
-			this->top = new Entity(*to_copy.top);
-		}
-
-		if(to_copy.bottom)
-		{
-			this->bottom = new Entity(*to_copy.bottom);
-			this->is_split = true;
-		}
+		//copy entities
+		top = to_copy.top;
+		bottom = to_copy.bottom;
+		is_split = to_copy.is_split;
+		talk_height = to_copy.talk_height;
+		top_origin = to_copy.top_origin;
+		bottom_origin = to_copy.bottom_origin;
 
 		return *this;
-	}
-
-	~Avatar()
-	{
-		if(top)
-		{
-			delete top;
-		}
-
-		if(bottom)
-		{
-			delete bottom;
-		}
 	}
 
 	//draw object to the screen
@@ -103,10 +79,10 @@ public:
 	{
 		update_position();
 
-		top->draw();
+		top.draw();
 		if(is_split)
 		{
-			bottom->draw();
+			bottom.draw();
 		}
 	}
 
@@ -115,19 +91,19 @@ public:
 	{
 		if(!is_split)
 		{
-			double yoffset = y - top->get_position().y;
+			double yoffset = y - top.get_position().y;
 
 			//set origin to 0 in order to calculate properly
-			top->set_origin(0,0);
-			bottom = new Entity(*top);
+			top.set_origin(0,0);
+			bottom = top;
 
 			//split avatar
-			top->entity_split(yoffset, 1);
-			bottom->entity_split(yoffset, -1);
+			top.entity_split(yoffset, 1);
+			bottom.entity_split(yoffset, -1);
 
 			//make a copy of the values
-			top_origin = top->get_origin();
-			bottom_origin = bottom->get_origin();
+			top_origin = top.get_origin();
+			bottom_origin = bottom.get_origin();
 
 			is_split = true;
 		}
@@ -136,18 +112,18 @@ public:
 	//get a reference to the top object
 	Object* get_top()
 	{
-		return (Object*)top;
+		return (Object*)&top;
 	}
 
 	//get a reference to the bottom object
 	Object* get_bottom()
 	{
-		return (Object*)bottom;
+		return (Object*)&bottom;
 	}
 
 	//move top jaw
 	void talk(double height)
-	{
+	{	
 		if(!is_split)
 		{
 			return;
@@ -168,16 +144,16 @@ public:
 		if(script)
 		{
 			script->load_function("vtuber_avatar_talk");
-			lua_bindings::create_object(script->get_state(), (Object*)top);
-			lua_bindings::create_object(script->get_state(), (Object*)bottom);
+			lua_bindings::create_object(script->get_state(), (Object*)&top);
+			lua_bindings::create_object(script->get_state(), (Object*)&bottom);
 			lua_pushnumber(script->get_state(), height * -1);
 			script->call(3);
 
 			return;
 		}
 
-		top->reset_position();
-		top->relative_move(0, move_val);
+		top.reset_position();
+		top.relative_move(0, move_val);
 	}
 
 	//reset object to origin
@@ -203,12 +179,12 @@ public:
 	{
 		if(is_split)
 		{
-			top->flip_horizontal();
-			bottom->flip_horizontal();
+			top.flip_horizontal();
+			bottom.flip_horizontal();
 		}
 		else
 		{
-			top->flip_horizontal();
+			top.flip_horizontal();
 		}
 	}
 
@@ -217,12 +193,12 @@ public:
 	{
 		if(is_split)
 		{
-			top->flip_vertical();
-			bottom->flip_vertical();
+			top.flip_vertical();
+			bottom.flip_vertical();
 		}
 		else
 		{
-			top->flip_vertical();
+			top.flip_vertical();
 		}
 	}
 };

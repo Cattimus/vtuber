@@ -48,6 +48,15 @@ protected:
 	}
 
 public:
+	Entity() : Object(0,0)
+	{
+		texture = NULL;
+		clamp = NULL;
+		h_flip = false;
+		v_flip = false;
+		flipval = SDL_FLIP_NONE;
+	}
+	
 	Entity(int w, int h, Texture* texture) : Object(w, h)
 	{
 		init(texture);
@@ -71,12 +80,12 @@ public:
 		}
 
 		Object::operator=(to_copy);
-		this->texture = to_copy.texture;
-		this->texture_coords = to_copy.texture_coords;
-		this->clamp = to_copy.clamp;
-		this->flipval = to_copy.flipval;
-		this->h_flip = to_copy.h_flip;
-		this->v_flip = to_copy.v_flip;
+		texture = to_copy.texture;
+		texture_coords = to_copy.texture_coords;
+		clamp = to_copy.clamp;
+		flipval = to_copy.flipval;
+		h_flip = to_copy.h_flip;
+		v_flip = to_copy.v_flip;
 		return *this;
 	}
 
@@ -147,7 +156,12 @@ public:
 	//draw object on the screen
 	void draw()
 	{
-		//algorithm to follow the top
+		//prevent segfaults if default initialized
+		if(!texture)
+		{
+			return;
+		}
+
 		//TODO - this will need to be scriptable in the future
 		if(clamp)
 		{

@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <math.h>
 
-class mic_input
+class mic
 {
 private:
 	pa_simple* s; //pulseaudio reference
@@ -113,7 +113,7 @@ private:
 	}
 
 public:
-	mic_input()
+	mic()
 	{
 		//default values (good for my setup)
 		sample_ms = 16.6667;
@@ -124,11 +124,11 @@ public:
 		initialize();
 
 		//start thread
-		this->audio_thread = std::thread(&mic_input::sample_thread, this);
+		this->audio_thread = std::thread(&mic::sample_thread, this);
 	}
 
 	//close our audio when the object goes out of scope
-	~mic_input()
+	~mic()
 	{
 		running = false;
 		audio_thread.join();

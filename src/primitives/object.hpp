@@ -42,6 +42,8 @@ protected:
 		SDL_Rect temp;
 		temp.w = w;
 		temp.h = h;
+		temp.x = 0;
+		temp.y = 0;
 
 		init(temp);
 	}
@@ -93,6 +95,7 @@ public:
 		this->rotation = to_copy.rotation;
 		this->rotation_axis = to_copy.rotation_axis;
 		this->script = to_copy.script;
+		this->render_priority = to_copy.render_priority;
 
 		return *this;
 	}
@@ -257,10 +260,5 @@ public:
 		std::cout << "x: " << position.x;
 		std::cout << " y: " << position.y;
 		std::cout << std::endl;
-	}
-
-	virtual ~Object()
-	{
-
 	}
 };

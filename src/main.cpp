@@ -13,7 +13,7 @@ using namespace std;
 #include "primitives/object.hpp"
 #include "primitives/avatar.hpp"
 #include "primitives/entity.hpp"
-#include "user_input/mic_input.hpp"
+#include "user_input/mic.hpp"
 
 //lua bindings for objects
 #include "lua_bindings/object_binding.hpp"
@@ -27,13 +27,12 @@ const unsigned int DEFAULT_WIDTH = 960;
 const unsigned int DEFAULT_HEIGHT = 540;
 double delta_val = 0;
 
-Avatar* player; // avatar that the user will be controlling
-Texture* player_tex;
-Object* selected_object; // currently clicked on object
-lua_State* L;
-
 double cursor_offset_x;
 double cursor_offset_y;
+
+Avatar* player; // avatar that the user will be controlling
+Object* selected_object; // currently clicked on object
+lua_State* L;
 
 //rendering vectors
 vector<Object*> draw_list; //list of drawable objects
@@ -67,29 +66,29 @@ extern "C"
 //initialize sdl values and return the result
 bool init_sdl()
 {
+	//init SDL
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
-		std::cout << "Failed to init SDL" << std::endl;
+		cout << "Failed to init SDL" << endl;
 		return false;
 	}
+
 	
-	//initialize SDL_IMG with png and jpg support enabled
+	//init SDL_IMG
 	int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
 	if(IMG_Init(img_flags) != img_flags)
 	{
-		std::cout << "SDL_Image init failed" << std::endl;
+		cout << "SDL_Image init failed" << endl;
 		return false;
 	}
 
-	//set renderer to bilinear scaling
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-	//enable vsync
-	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-
 	//create window
-	window = SDL_CreateWindow("Cattimus' Vtuber Simulator",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		DEFAULT_WIDTH, DEFAULT_HEIGHT,
+	window = SDL_CreateWindow(
+		"Cattimus' Vtuber Simulator",
+		SDL_WINDOWPOS_CENTERED, 
+		SDL_WINDOWPOS_CENTERED,
+		DEFAULT_WIDTH,
+		DEFAULT_HEIGHT,
 		SDL_WINDOW_SHOWN);
 
 	if(!window)
@@ -99,7 +98,8 @@ bool init_sdl()
 	}
 
 	//create screen and renderer
-	screen = SDL_GetWindowSurface(window);
+	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1"); //enable vsync
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"); //bilinear scaling
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if(!renderer)
 	{
@@ -107,8 +107,9 @@ bool init_sdl()
 		return false;
 	}
 	
+	//initialize miscellaneous variables
+	screen = SDL_GetWindowSurface(window);
 	SDL_SetRenderDrawColor(renderer, 51, 51, 77, 0xFF);
-
 	return true;
 }
 
@@ -213,27 +214,22 @@ void handle_input(bool& running)
 
 int main()
 {
-	auto result = init_sdl();
-	init_lua();
-	if(!result)
-	{
-		return 0;
-	}
-
+	if(!init_sdl()) {return 0;}
 	delta = &delta_val;
+	init_lua();
 
 	//load textures
 	textures.push_back(Texture("../assets/catt_transparent.png"));
 	textures.push_back(Texture("../assets/tophat.png"));
 
 	//load objects
-	avatars.push_back(Avatar((SDL_Rect){
-			    (int)(screen_height * 0.25),
+	avatars.push_back(
+			Avatar((SDL_Rect){
+				(int)(screen_height * 0.25),
 				(int)(screen_height * 0.25), 
 				(int)(screen_width  * 0.75), 
 				(int)(screen_height * 0.75)},
-		&textures[0]));
-
+			&textures[0]));
 	player = &avatars[0];
 
 	entities.push_back(Entity(500, 200, &textures[1]));
@@ -243,7 +239,7 @@ int main()
 	hat->flip_horizontal();
 			
 	// audio input from microphone
-	mic_input voice;
+	mic voice;
 	
 	//load test scripts
 	scripts.push_back(Script("../src/scripts/test.lua", L));
