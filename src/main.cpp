@@ -51,7 +51,7 @@ vector<Texture> textures;  //all instances of texture
 bool init_sdl();
 void init_lua();
 void quit_sdl();
-void add_drawlist(Object* to_add);
+void sort_drawlist();
 void handle_input(bool& running);
 
 extern "C"
@@ -105,14 +105,15 @@ int main()
 	//set drawable objects
 	for(size_t i = 0; i < avatars.size(); i++)
 	{
-		add_drawlist((Object*)&avatars[i]);
+		draw_list.push_back((Object*)&avatars[i]);
 	}
 
 	for(size_t i = 0; i < entities.size(); i++)
 	{
-		add_drawlist((Object*)&entities[i]);
+		draw_list.push_back((Object*)&entities[i]);
 	}
-	
+	sort_drawlist();
+
 	//main loop
 	bool running = true;
 	while(running)
@@ -224,7 +225,7 @@ void quit_sdl()
 	SDL_Quit();
 }
 
-//TODO - clean up user input function
+//TODO - refactor this horrible mess, it's getting worse. help!
 //helper function to handle user input
 void handle_input(bool& running)
 {
@@ -268,6 +269,8 @@ void handle_input(bool& running)
 						}
 					}
 				}
+
+				break;
 			}
 
 			case SDL_MOUSEBUTTONUP:
@@ -277,6 +280,8 @@ void handle_input(bool& running)
 					//reset selected_object when mouse button has been released
 					selected_object = NULL;
 				}
+
+				break;
 			}
 
 			//move any object that the player has clicked on while the button is held down
@@ -291,25 +296,53 @@ void handle_input(bool& running)
 					cursor_offset_x = x;
 					cursor_offset_y = y;
 				}
+
+				break;
 			}
 			
 			//key events
 			case SDL_KEYDOWN:
 			{
-				//proof of concept for changing textures
-				if(e.key.keysym.sym == SDLK_r)
+				switch(e.key.keysym.sym)
 				{
-					if(last_selected)
+					case SDLK_r:
 					{
-						last_selected->change_texture(&textures[0]);
+						if(last_selected)
+						{
+							last_selected->change_texture(&textures[0]);
+						}
+
+						break;
 					}
+
+					case SDLK_ESCAPE:
+						last_selected = NULL;
+					break;
+
+					case SDLK_EQUALS:
+					{
+						if(last_selected)
+						{	
+							last_selected->inc_priority();
+							sort_drawlist();
+						}
+						break;
+					}
+
+					case SDLK_MINUS:
+					{
+						if(last_selected)
+						{
+							last_selected->dec_priority();
+							sort_drawlist();
+						}
+						break;
+
+					}
+
 				}
-				
-				//clear previously selected item on esc
-				if(e.key.keysym.sym == SDLK_ESCAPE)
-				{
-					last_selected = NULL;
-				}
+
+				break;
 			}
 		}
 	}
@@ -331,12 +364,11 @@ static int get_player(lua_State* L)
 
 static bool comp(Object* a, Object* b)
 {
-	return a->get_priority() > b->get_priority();
+	return a->get_priority() < b->get_priority();
 }
 
-//add an item to the render list in priority order
-void add_drawlist(Object* to_add)
+//sort elements in the draw list by priority
+void sort_drawlist()
 {
-	draw_list.push_back(to_add);
 	sort(draw_list.begin(), draw_list.end(), comp);
 }

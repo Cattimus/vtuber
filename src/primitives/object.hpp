@@ -288,4 +288,14 @@ public:
 	{
 		return render_priority;
 	}
+
+	void inc_priority()
+	{
+		render_priority = render_priority + 1;
+	}
+
+	void dec_priority()
+	{
+		render_priority = render_priority - 1;
+	}
 };
