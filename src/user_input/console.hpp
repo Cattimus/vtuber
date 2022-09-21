@@ -15,11 +15,9 @@ private:
 	
 	//Each option level will have it's own hashed vector.
 	//User input will be hashed and compared to the selection list for speed
-	//The selected object will be whatever is clicked with the mouse
 	//The selection can be cleared by pressing esc
-	//Objects should be given a render priority. This will determine whether they're rendered on top of or below other objects.	
 	//Objects that have been clicked should automatically be brought to the top of the render priority
-	
+	//all operations will be conducted on the selected object	
 	
 
 	public:

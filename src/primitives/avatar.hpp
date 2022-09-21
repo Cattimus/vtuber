@@ -35,6 +35,16 @@ private:
 			bottom.set_origin(bottom_origin.x + position.x, bottom_origin.y + position.y);
 		}
 	}
+	
+	//reverse the splitting operation on texture change
+	void unsplit()
+	{
+		top.set_origin(origin);
+		bottom.set_origin(origin);
+		top.reset_size();
+		bottom.reset_size();
+		is_split = false;
+	}
 
 public:
 	Avatar(SDL_Rect size, Texture* texture) : Object(size)
@@ -84,6 +94,14 @@ public:
 		{
 			bottom.draw();
 		}
+	}
+	
+	//update texture
+	void change_texture(Texture* to_change)
+	{
+		top.change_texture(to_change);
+		bottom.change_texture(to_change);
+		unsplit();
 	}
 
 	//split the avatar along the horizontal line at position y

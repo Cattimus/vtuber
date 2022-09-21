@@ -120,6 +120,14 @@ public:
 			texture_coords.y += top_texcoord_h;
 		}
 	}
+	
+	//update texture
+	void change_texture(Texture* to_change)
+	{
+		texture = to_change;
+		texture_coords.w = to_change->getw();
+		texture_coords.h = to_change->geth();
+	}
 
 	//flip texture vertically
 	void flip_vertical()

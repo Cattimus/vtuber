@@ -99,8 +99,8 @@ int main()
 	scripts.push_back(Script("../src/scripts/test.lua", L));
 	player->set_script(&scripts[0]);
 	player->set_priority(1);
-	hat->set_priority(-1);
-	entities[1].set_priority(0);
+	hat->set_priority(0);
+	entities[1].set_priority(2);
 
 	//set drawable objects
 	for(size_t i = 0; i < avatars.size(); i++)
@@ -258,10 +258,14 @@ void handle_input(bool& running)
 					cursor_offset_x = x;
 					cursor_offset_y = y;
 
-					// TODO - check if any entities have been clicked on
-					if (player->clicked(x, y))
+					//drag any object on the screen that has been clicked	
+					for(auto obj : draw_list)
 					{
-						selected_object = player;
+						if(obj->clicked(x,y))
+						{
+							selected_object = obj;
+							last_selected = obj;
+						}
 					}
 				}
 			}
@@ -288,6 +292,25 @@ void handle_input(bool& running)
 					cursor_offset_y = y;
 				}
 			}
+			
+			//key events
+			case SDL_KEYDOWN:
+			{
+				//proof of concept for changing textures
+				if(e.key.keysym.sym == SDLK_r)
+				{
+					if(last_selected)
+					{
+						last_selected->change_texture(&textures[0]);
+					}
+				}
+				
+				//clear previously selected item on esc
+				if(e.key.keysym.sym == SDLK_ESCAPE)
+				{
+					last_selected = NULL;
+				}
+			}
 		}
 	}
 }
@@ -308,7 +331,7 @@ static int get_player(lua_State* L)
 
 static bool comp(Object* a, Object* b)
 {
-	return a->get_priority() < b->get_priority();
+	return a->get_priority() > b->get_priority();
 }
 
 //add an item to the render list in priority order

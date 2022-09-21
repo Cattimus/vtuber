@@ -3,6 +3,10 @@
 #include <SDL.h>
 #include "globals.hpp"
 #include "lua_bindings/script.hpp"
+#include "primitives/texture.hpp"
+
+//forward declaration of texture
+class Texture;
 
 class Object
 {
@@ -103,6 +107,12 @@ public:
 	
 	//draw function that can be overridden by child classes
 	virtual void draw()
+	{
+		return;
+	}
+
+	//function that will be defined by child classes to change textures
+	virtual void change_texture(Texture* to_change)
 	{
 		return;
 	}
@@ -220,6 +230,12 @@ public:
 	void set_origin(SDL_Rect& new_origin)
 	{
 		origin = new_origin;
+	}
+
+	void reset_size()
+	{
+		offset.w = origin.w;
+		offset.h = origin.h;
 	}
 
 	//update origin values (x and y)
