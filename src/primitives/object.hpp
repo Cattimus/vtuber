@@ -282,6 +282,8 @@ public:
 	void set_priority(int val)
 	{
 		render_priority = val;
+		std::cout << "render priority: " << render_priority << std::endl;
+		
 	}
 
 	int get_priority()

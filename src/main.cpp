@@ -36,7 +36,7 @@ double delta_val = 0;
 double cursor_offset_x;
 double cursor_offset_y;
 
-Avatar* player; // avatar that the user will be controlling
+Avatar* player; 		 // avatar that the user will be controlling
 Object* selected_object; // currently clicked on object
 lua_State* L;
 
@@ -59,7 +59,6 @@ extern "C"
 	static int get_player(lua_State* L);
 }
 
-// TODO - hot swap image while program is running
 // TODO - make an "engine" api for lua functions
 int main()
 {
@@ -98,9 +97,9 @@ int main()
 	//load test scripts
 	scripts.push_back(Script("../src/scripts/test.lua", L));
 	player->set_script(&scripts[0]);
-	player->set_priority(1);
-	hat->set_priority(0);
-	entities[1].set_priority(2);
+	avatars[0].set_priority(1);
+	entities[0].set_priority(2);
+	entities[1].set_priority(0);
 
 	//set drawable objects
 	for(size_t i = 0; i < avatars.size(); i++)
@@ -133,7 +132,6 @@ int main()
 		{
 			draw_list[i]->draw();
 		}
-
 		SDL_RenderPresent(renderer);
 	}
 
@@ -152,7 +150,6 @@ bool init_sdl()
 		cout << "Failed to init SDL" << endl;
 		return false;
 	}
-
 	
 	//init SDL_IMG
 	int img_flags = IMG_INIT_PNG | IMG_INIT_JPG;
@@ -225,126 +222,122 @@ void quit_sdl()
 	SDL_Quit();
 }
 
-//TODO - refactor this horrible mess, it's getting worse. help!
+//handle mouse button down event (helper for handle input)
+static void handle_mousedown(SDL_Event &e)
+{
+	auto x = e.button.x;
+	auto y = e.button.y;
+
+	// split avatar at y value. player has left clicked the player object
+	if (e.button.button == SDL_BUTTON_RIGHT && e.button.state == SDL_PRESSED)
+	{
+		if (player->clicked(x, y))
+		{
+			player->avatar_split(y);
+		}
+	}
+
+	// move player/object
+	if (e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_PRESSED)
+	{
+		cursor_offset_x = x;
+		cursor_offset_y = y;
+
+		//drag any object on the screen that has been clicked	
+		for(auto obj : draw_list)
+		{
+			if(obj->clicked(x,y))
+			{
+				selected_object = obj;
+				last_selected = obj;
+			}
+		}
+	}
+}
+
+//handle mouse button up event (helper for handle input)
+static void handle_mouseup(SDL_Event &e)
+{	
+	//reset selected_object when mouse button has been released
+	if(e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_RELEASED)
+	{
+		selected_object = NULL;
+	}
+}
+
+//handle mouse motion event (helper for handle input)
+static void handle_mousemotion(SDL_Event &e)
+{
+	if (selected_object)
+	{
+		auto x = e.button.x;
+		auto y = e.button.y;
+
+		selected_object->relative_move(x - cursor_offset_x, y - cursor_offset_y);
+		cursor_offset_x = x;
+		cursor_offset_y = y;
+	}	
+}
+
+//helper function for handling key input (helper for handle input)
+static void handle_keyinput(SDL_Event &e)
+{
+	switch(e.key.keysym.sym)
+	{
+		case SDLK_ESCAPE:
+			last_selected = NULL;
+		break;
+
+		case SDLK_r:
+			if(last_selected)
+			{
+				last_selected->change_texture(&textures[0]);
+			}
+		break;
+
+		case SDLK_EQUALS:
+			if(last_selected)
+			{	
+				last_selected->inc_priority();
+				sort_drawlist();
+			}
+		break;
+
+		case SDLK_MINUS:
+			if(last_selected)
+			{
+				last_selected->dec_priority();
+				sort_drawlist();
+			}
+		break;
+	}
+}
+
 //helper function to handle user input
 void handle_input(bool& running)
 {
 	SDL_Event e;
 	while(SDL_PollEvent(&e) != 0)
 	{
-		switch(e.type)
-		{
-			case SDL_QUIT:
-			{
-				running = false;
-			}
 
-			case SDL_MOUSEBUTTONDOWN:
-			{
-				auto x = e.button.x;
-				auto y = e.button.y;
-
-				// split avatar at y value. player has left clicked the player object
-				if (e.button.button == SDL_BUTTON_RIGHT && e.button.state == SDL_PRESSED)
-				{
-					if (player->clicked(x, y))
-					{
-						player->avatar_split(y);
-					}
-				}
-
-				// move player/object
-				if (e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_PRESSED)
-				{
-					cursor_offset_x = x;
-					cursor_offset_y = y;
-
-					//drag any object on the screen that has been clicked	
-					for(auto obj : draw_list)
-					{
-						if(obj->clicked(x,y))
-						{
-							selected_object = obj;
-							last_selected = obj;
-						}
-					}
-				}
-
-				break;
-			}
-
-			case SDL_MOUSEBUTTONUP:
-			{
-				if(e.button.button == SDL_BUTTON_LEFT && e.button.state == SDL_RELEASED)
-				{
-					//reset selected_object when mouse button has been released
-					selected_object = NULL;
-				}
-
-				break;
-			}
-
-			//move any object that the player has clicked on while the button is held down
-			case SDL_MOUSEMOTION:
-			{
-				if (selected_object)
-				{
-					auto x = e.button.x;
-					auto y = e.button.y;
-
-					selected_object->relative_move(x - cursor_offset_x, y - cursor_offset_y);
-					cursor_offset_x = x;
-					cursor_offset_y = y;
-				}
-
-				break;
-			}
-			
-			//key events
-			case SDL_KEYDOWN:
-			{
-				switch(e.key.keysym.sym)
-				{
-					case SDLK_r:
-					{
-						if(last_selected)
-						{
-							last_selected->change_texture(&textures[0]);
-						}
-
-						break;
-					}
-
-					case SDLK_ESCAPE:
-						last_selected = NULL;
-					break;
-
-					case SDLK_EQUALS:
-					{
-						if(last_selected)
-						{	
-							last_selected->inc_priority();
-							sort_drawlist();
-						}
-						break;
-					}
-
-					case SDLK_MINUS:
-					{
-						if(last_selected)
-						{
-							last_selected->dec_priority();
-							sort_drawlist();
-						}
-						break;
-
-					}
-
-				}
-
-				break;
-			}
-		}
+	switch(e.type)
+	{
+		case SDL_QUIT:
+			running = false;
+		break;
+		case SDL_MOUSEBUTTONDOWN:
+			handle_mousedown(e);
+		break;
+		case SDL_MOUSEBUTTONUP:
+			handle_mouseup(e);
+		break;
+		case SDL_MOUSEMOTION:
+			handle_mousemotion(e);
+		break;
+		case SDL_KEYDOWN:
+			handle_keyinput(e);
+		break;
+	}
 	}
 }
 
