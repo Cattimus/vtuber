@@ -112,7 +112,7 @@ public:
 	}
 
 	//function that will be defined by child classes to change textures
-	virtual void change_texture(Texture* to_change)
+	virtual void set_texture(Texture* to_change)
 	{
 		return;
 	}
@@ -282,8 +282,6 @@ public:
 	void set_priority(int val)
 	{
 		render_priority = val;
-		std::cout << "render priority: " << render_priority << std::endl;
-		
 	}
 
 	int get_priority()

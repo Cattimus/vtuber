@@ -9,12 +9,9 @@
 #include <algorithm>
 using namespace std;
 
-// local file includes
-#include "primitives/texture.hpp"
-#include "primitives/object.hpp"
-#include "primitives/avatar.hpp"
-#include "primitives/entity.hpp"
+//user input objects
 #include "user_input/mic.hpp"
+#include "user_input/console.hpp"
 
 //lua bindings for objects
 #include "lua_bindings/object_binding.hpp"
@@ -39,13 +36,6 @@ double cursor_offset_y;
 Avatar* player; 		 // avatar that the user will be controlling
 Object* selected_object; // currently clicked on object
 lua_State* L;
-
-//rendering vectors
-vector<Object*> draw_list; //list of drawable objects
-vector<Avatar> avatars;    //all instances of avatar
-vector<Entity> entities;   //all instances of entity
-vector<Script> scripts;	   //all instances of script
-vector<Texture> textures;  //all instances of texture
 
 //function declarations
 bool init_sdl();
@@ -87,9 +77,6 @@ int main()
 	hat->clamp_to(player->get_top());
 	hat->set_offset(175, -70);
 	hat->flip_horizontal();
-
-	//test cat object
-	entities.push_back(Entity(500, 300, &textures[2]));	
 			
 	// audio input from microphone
 	mic voice;
@@ -99,7 +86,6 @@ int main()
 	player->set_script(&scripts[0]);
 	avatars[0].set_priority(1);
 	entities[0].set_priority(2);
-	entities[1].set_priority(0);
 
 	//set drawable objects
 	for(size_t i = 0; i < avatars.size(); i++)
@@ -291,7 +277,7 @@ static void handle_keyinput(SDL_Event &e)
 		case SDLK_r:
 			if(last_selected)
 			{
-				last_selected->change_texture(&textures[0]);
+				last_selected->set_texture(&textures[0]);
 			}
 		break;
 

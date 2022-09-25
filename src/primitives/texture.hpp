@@ -45,4 +45,9 @@ public:
 	{
 		return texture;
 	}
+
+	string get_path()
+	{
+		return file_path;
+	}
 };
