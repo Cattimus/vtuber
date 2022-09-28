@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.15)
 
-project(main)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+project(main)
 
 set(SOURCES
 	src/main.cpp
@@ -10,11 +10,13 @@ set(SOURCES
 	src/primitives/entity.hpp
 	src/primitives/object.hpp
 	src/primitives/texture.hpp
-	src/user_input/mic_input.hpp
+	src/user_input/mic.hpp
 	src/user_input/console.hpp
-	src/globals.hpp
 	src/lua_bindings/object_binding.hpp
-	src/lua_bindings/script.hpp)
+	src/lua_bindings/object_binding.cpp
+	src/lua_bindings/script.hpp
+	src/state.hpp
+	src/state.cpp)
 
 include_directories(libs)
 include_directories(src)
