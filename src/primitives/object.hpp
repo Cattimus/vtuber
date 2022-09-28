@@ -1,12 +1,8 @@
 #pragma once
 
 #include <SDL.h>
-#include "globals.hpp"
 #include "lua_bindings/script.hpp"
 #include "primitives/texture.hpp"
-
-//forward declaration of texture
-class Texture;
 
 class Object
 {
@@ -106,7 +102,7 @@ public:
 	}
 	
 	//draw function that can be overridden by child classes
-	virtual void draw()
+	virtual void draw(SDL_Renderer* renderer)
 	{
 		return;
 	}
