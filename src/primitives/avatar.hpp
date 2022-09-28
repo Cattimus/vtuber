@@ -1,6 +1,5 @@
 #pragma once
 
-#include "globals.hpp"
 #include "object.hpp"
 #include "texture.hpp"
 #include "entity.hpp"
@@ -85,14 +84,14 @@ public:
 	}
 
 	//draw object to the screen
-	void draw()
+	void draw(SDL_Renderer* renderer)
 	{
 		update_position();
 
-		top.draw();
+		top.draw(renderer);
 		if(is_split)
 		{
-			bottom.draw();
+			bottom.draw(renderer);
 		}
 	}
 	
@@ -102,6 +101,11 @@ public:
 		top.change_texture(to_change);
 		bottom.change_texture(to_change);
 		unsplit();
+	}
+
+	Texture* get_texture()
+	{
+		return top.get_texture();
 	}
 
 	//split the avatar along the horizontal line at position y
