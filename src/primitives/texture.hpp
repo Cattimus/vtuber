@@ -2,7 +2,7 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
-#include "globals.hpp"
+using namespace std;
 
 class Texture
 {
@@ -13,7 +13,7 @@ private:
 	int h;
 
 public:
-	Texture(const char* path)
+	Texture(const char* path, SDL_Renderer* renderer)
 	{
 		this->file_path = path;
 	
