@@ -1,6 +1,5 @@
 #pragma once
 
-#include "globals.hpp"
 #include "object.hpp"
 #include "texture.hpp"
 
@@ -129,6 +128,11 @@ public:
 		texture_coords.h = to_change->geth();
 	}
 
+	Texture* get_texture()
+	{
+		return texture;
+	}
+
 	//flip texture vertically
 	void flip_vertical()
 	{
@@ -162,7 +166,7 @@ public:
 	}
 
 	//draw object on the screen
-	void draw()
+	void draw(SDL_Renderer* renderer)
 	{
 		//prevent segfaults if default initialized
 		if(!texture)
