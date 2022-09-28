@@ -17,6 +17,14 @@ using namespace std;
 #include "lua_bindings/object_binding.hpp"
 #include "lua_bindings/script.hpp"
 
+//primitive objects
+#include "primitives/object.hpp"
+#include "primitives/avatar.hpp"
+#include "primitives/entity.hpp"
+#include "primitives/texture.hpp"
+
+#include "state.hpp"
+
 //lua global functions and lua includes
 extern "C"
 {
@@ -29,6 +37,8 @@ extern "C"
 const unsigned int DEFAULT_WIDTH = 960;
 const unsigned int DEFAULT_HEIGHT = 540;
 double delta_val = 0;
+int screen_height = DEFAULT_HEIGHT;
+int screen_width = DEFAULT_WIDTH;
 
 double cursor_offset_x;
 double cursor_offset_y;
@@ -36,6 +46,12 @@ double cursor_offset_y;
 Avatar* player; 		 // avatar that the user will be controlling
 Object* selected_object; // currently clicked on object
 lua_State* L;
+
+SDL_Renderer* renderer;
+SDL_Window* window;
+SDL_Surface* screen;
+
+State state;
 
 //function declarations
 bool init_sdl();
@@ -49,31 +65,31 @@ extern "C"
 	static int get_player(lua_State* L);
 }
 
-// TODO - make an "engine" api for lua functions
 int main()
 {
 	if(!init_sdl()) {return 0;}
-	delta = &delta_val;
+	state.renderer = renderer;
+	state.delta = &delta_val;
 	init_lua();
 
 	//load textures
-	textures.push_back(Texture("../assets/catt_transparent.png"));
-	textures.push_back(Texture("../assets/tophat.png"));
-	textures.push_back(Texture("../assets/crep.png"));
+	state.textures.push_back(Texture("../assets/catt_transparent.png", renderer));
+	state.textures.push_back(Texture("../assets/tophat.png", renderer));
+	state.textures.push_back(Texture("../assets/crep.png", renderer));
 
 	//player object
-	avatars.push_back(
+	state.avatars.push_back(
 			Avatar((SDL_Rect){
 				(int)(screen_height * 0.25),
 				(int)(screen_height * 0.25), 
 				(int)(screen_width  * 0.75), 
 				(int)(screen_height * 0.75)},
-			&textures[0]));
-	player = &avatars[0];
+			&state.textures[0]));
+	player = &state.avatars[0];
 	
 	//hat object
-	entities.push_back(Entity(500, 200, &textures[1]));
-	auto hat = &entities[0];
+	state.entities.push_back(Entity(500, 200, &state.textures[1]));
+	auto hat = &state.entities[0];
 	hat->clamp_to(player->get_top());
 	hat->set_offset(175, -70);
 	hat->flip_horizontal();
@@ -82,22 +98,22 @@ int main()
 	mic voice;
 	
 	//load test scripts
-	scripts.push_back(Script("../src/scripts/test.lua", L));
-	player->set_script(&scripts[0]);
-	avatars[0].set_priority(1);
-	entities[0].set_priority(2);
+	state.scripts.push_back(Script("../src/scripts/test.lua", L));
+	player->set_script(&state.scripts[0]);
+	state.avatars[0].set_priority(1);
+	state.entities[0].set_priority(2);
 
 	//set drawable objects
-	for(size_t i = 0; i < avatars.size(); i++)
+	for(size_t i = 0; i < state.avatars.size(); i++)
 	{
-		draw_list.push_back((Object*)&avatars[i]);
+		state.draw_list.push_back((Object*)&state.avatars[i]);
 	}
 
-	for(size_t i = 0; i < entities.size(); i++)
+	for(size_t i = 0; i < state.entities.size(); i++)
 	{
-		draw_list.push_back((Object*)&entities[i]);
+		state.draw_list.push_back((Object*)&state.entities[i]);
 	}
-	sort_drawlist();
+	state.sort_drawlist();
 
 	//main loop
 	bool running = true;
@@ -108,15 +124,15 @@ int main()
 		
 		//perform talk operation for every avatar
 		double db = voice.get();
-		for(size_t i = 0; i < avatars.size(); i++)
+		for(size_t i = 0; i < state.avatars.size(); i++)
 		{
-			avatars[i].talk(db);
+			state.avatars[i].talk(db);
 		}
 
 		//draw all drawable objects
-		for(size_t i = 0; i < draw_list.size(); i++)
+		for(size_t i = 0; i < state.draw_list.size(); i++)
 		{
-			draw_list[i]->draw();
+			state.draw_list[i]->draw(renderer);
 		}
 		SDL_RenderPresent(renderer);
 	}
@@ -184,7 +200,6 @@ void init_lua()
 
 	lua_bindings::luaopen_object(L);
 
-	//TODO - in the future this will be wrapped in an "engine" module along with other functions like it
 	lua_pushcfunction(L, get_player);
 	lua_setglobal(L, "get_player");
 }
@@ -230,12 +245,13 @@ static void handle_mousedown(SDL_Event &e)
 		cursor_offset_y = y;
 
 		//drag any object on the screen that has been clicked	
-		for(auto obj : draw_list)
+		for(size_t i = 0; i < state.draw_list.size(); i++)
 		{
+			Object* obj = state.draw_list[i];
 			if(obj->clicked(x,y))
 			{
 				selected_object = obj;
-				last_selected = obj;
+				state.last_selected = obj;
 			}
 		}
 	}
@@ -277,7 +293,7 @@ static void handle_keyinput(SDL_Event &e)
 		case SDLK_r:
 			if(last_selected)
 			{
-				last_selected->set_texture(&textures[0]);
+				last_selected->set_texture(&state.textures[0]);
 			}
 		break;
 
@@ -285,7 +301,7 @@ static void handle_keyinput(SDL_Event &e)
 			if(last_selected)
 			{	
 				last_selected->inc_priority();
-				sort_drawlist();
+				state.sort_drawlist();
 			}
 		break;
 
@@ -293,7 +309,7 @@ static void handle_keyinput(SDL_Event &e)
 			if(last_selected)
 			{
 				last_selected->dec_priority();
-				sort_drawlist();
+				state.sort_drawlist();
 			}
 		break;
 	}
@@ -339,15 +355,4 @@ static int get_player(lua_State* L)
 	//give lua the player as converted to an object.
 	lua_bindings::create_object(L, (Object*)player);
 	return 1;
-}
-
-static bool comp(Object* a, Object* b)
-{
-	return a->get_priority() < b->get_priority();
-}
-
-//sort elements in the draw list by priority
-void sort_drawlist()
-{
-	sort(draw_list.begin(), draw_list.end(), comp);
 }
