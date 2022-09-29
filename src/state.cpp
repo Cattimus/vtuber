@@ -2,10 +2,10 @@
 //CONSTRUCTORS
 State::State()
 {
-	delta = NULL;
 	last_selected = NULL;
+	delta = NULL;
 	renderer = NULL;
-	return;
+	L = NULL;
 }
 
 State& State::operator=(const State& to_copy)
@@ -24,6 +24,7 @@ State& State::operator=(const State& to_copy)
 	last_selected = to_copy.last_selected;
 	delta = to_copy.delta;
 	renderer = to_copy.renderer;
+	L = to_copy.L;
 	return *this;
 }
 
@@ -32,12 +33,35 @@ State::State(const State& to_copy)
 	*this = to_copy;
 }
 
+State::~State()
+{
+	for(auto val : avatars)
+	{
+		delete val;
+	}
+
+	for(auto val : entities)
+	{
+		delete val;
+	}
+
+	for(auto val : scripts)
+	{
+		delete val;
+	}
+
+	for(auto val: textures)
+	{
+		delete val;
+	}
+}
+
 //this will clean up unused textures
 void State::reclaim_textures(string path)
 {
 	for(size_t i = 0; i < avatars.size(); i++)
 	{
-		if(avatars[i].get_texture()->get_path() == path)
+		if(avatars[i]->get_texture()->get_path() == path)
 		{
 			return;	
 		}
@@ -45,7 +69,7 @@ void State::reclaim_textures(string path)
 
 	for(size_t i = 0; i < entities.size(); i++)
 	{
-		if(entities[i].get_texture()->get_path() == path)
+		if(entities[i]->get_texture()->get_path() == path)
 		{
 			return;
 		}
@@ -62,6 +86,7 @@ void State::delete_texture(string path)
 
 	if(index > -1)
 	{
+		delete[] textures[index];
 		textures.erase(textures.begin() + index);
 	}
 }
@@ -71,9 +96,9 @@ Texture* State::search_textures(string path)
 {
 	for(size_t i = 0; i < textures.size(); i++)
 	{
-		if(textures[i].get_path() == path)
+		if(textures[i]->get_path() == path)
 		{
-			return &textures[i];
+			return textures[i];
 		}
 	}
 
@@ -85,7 +110,7 @@ int State::tex_index(string path)
 {
 	for(size_t i = 0; i < textures.size(); i++)
 	{
-		if(textures[i].get_path() == path)
+		if(textures[i]->get_path() == path)
 		{
 			return i;
 		}
@@ -107,37 +132,116 @@ void State::sort_drawlist()
 }
 
 //create a new entity and push it to the proper arrays
-void State::new_entity(int w, int h, int x, int y, int priority, string tex_path)
+Entity* State::new_entity(int x, int y,
+						  int w, int h,
+						  int priority,
+						  string tex_path)
 {
+	Entity* to_return = NULL;
+
 	//fetch or create texture for file
-	Texture* tex = search_textures(tex_path);
-	if(!tex)
-	{
-		textures.push_back(Texture(tex_path.c_str(), renderer));
-		tex = &textures[textures.size() - 1];
-	}
-	
+	Texture* tex = new_texture(tex_path);
+
 	//create new entity and push it to the draw list
-	entities.push_back(Entity((SDL_Rect){x,y,w,h}, tex));
-	draw_list.push_back((Object*)&entities[entities.size() - 1]);
+	entities.push_back(new Entity((SDL_Rect){x,y,w,h}, tex));
+	to_return = entities[entities.size() - 1];
+	draw_list.push_back((Object*)to_return);
+
 	sort_drawlist(); //sort the rendering array
+	return to_return; //return a reference to the new entity
 }
 
 //create a new avatar and push it to the proper arrays
-void State::new_avatar(int w, int h, int x, int y, int priority, string tex_path)
+Avatar* State::new_avatar(int x, int y,
+						  int w, int h,
+						  int priority,
+						  string tex_path,
+						  string script_path)
 {
+	Avatar* to_return = NULL;
+	
 	//fetch or create texture for file
-	Texture* tex = search_textures(tex_path);
-	if(!tex)
+	Texture* tex = new_texture(tex_path);
+	
+	//fetch or create script for file
+	Script* script = NULL;
+	if(script_path != "")
 	{
-		textures.push_back(Texture(tex_path.c_str(), renderer));
-		tex = &textures[textures.size() - 1];
-	}
+		script = new_script(script_path);
+	}	
 	
 	//create a new avatar and push it to the draw list
-	avatars.push_back(Avatar((SDL_Rect){x,y,w,h}, tex));
-	draw_list.push_back((Object*)&avatars[avatars.size() - 1]);
+	avatars.push_back(new Avatar((SDL_Rect){x,y,w,h}, tex));
+	to_return = avatars[avatars.size() - 1];
+	draw_list.push_back((Object*)to_return);
 	sort_drawlist(); //sort the rendering array
+
+	//attach script to avatar
+	if(script)
+	{
+		to_return->set_script(script);
+	}
+
+	return to_return;
+}
+
+//create new texture from file
+Texture* State::new_texture(string path)
+{
+	Texture* to_return = search_textures(path);
+
+	if(!to_return && renderer != NULL)
+	{
+		textures.push_back(new Texture(path.c_str(), renderer));
+		to_return = textures[textures.size() - 1];
+	}
+
+	return to_return;
+}
+
+//create a new script or find a reference to existing script
+Script* State::new_script(string path)
+{
+	Script* to_return = search_scripts(path);
+	
+	if(!to_return && L != NULL)
+	{
+		scripts.push_back(new Script(path.c_str(), L));
+		to_return = scripts[scripts.size() - 1];
+	}
+
+	return to_return;
+}
+
+//search scripts array for script that shares the same path
+Script* State::search_scripts(string path)
+{
+	Script* to_return = NULL;
+
+	for(size_t i = 0; i < scripts.size(); i++)
+	{
+		if(scripts[i]->get_path() == path)
+		{
+			to_return = scripts[i];
+			return to_return;
+		}
+	}
+
+	return NULL;
+}
+
+//search the scripts array for the index
+int State::script_index(string path)
+{
+	for(size_t i = 0; i < scripts.size(); i++)
+	{
+		if(scripts[i]->get_path() == path)
+		{
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 //delete an entity from drawlist and entity list
@@ -146,8 +250,9 @@ void State::delete_entity(Object* ref)
 	//erase from entity list
 	for(size_t i = 0; i < entities.size(); i++)
 	{
-		if((Object*)(&entities[i]) == ref)
+		if((Object*)(entities[i]) == ref)
 		{
+			delete[] entities[i];
 			entities.erase(entities.begin()+i);
 			break;
 		}
@@ -172,6 +277,7 @@ void State::delete_avatar(Object* ref)
 	{
 		if((Object*)(&avatars[i]) == ref)
 		{
+			delete[] avatars[i];
 			avatars.erase(avatars.begin()+i);
 		}
 	}
