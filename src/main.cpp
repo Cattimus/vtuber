@@ -25,7 +25,7 @@ using namespace std;
 
 #include "state.hpp"
 
-//lua global functions and lua includes
+//lua includes
 extern "C"
 {
 	#include <lua.h>
@@ -44,6 +44,7 @@ double cursor_offset_x;
 double cursor_offset_y;
 
 Avatar* player; 		 // avatar that the user will be controlling
+Entity* hat;
 Object* selected_object; // currently clicked on object
 lua_State* L;
 
@@ -71,49 +72,25 @@ int main()
 	state.renderer = renderer;
 	state.delta = &delta_val;
 	init_lua();
-
-	//load textures
-	state.textures.push_back(Texture("../assets/catt_transparent.png", renderer));
-	state.textures.push_back(Texture("../assets/tophat.png", renderer));
-	state.textures.push_back(Texture("../assets/crep.png", renderer));
-
-	//player object
-	state.avatars.push_back(
-			Avatar((SDL_Rect){
-				(int)(screen_height * 0.25),
-				(int)(screen_height * 0.25), 
-				(int)(screen_width  * 0.75), 
-				(int)(screen_height * 0.75)},
-			&state.textures[0]));
-	player = &state.avatars[0];
+	state.L = L;
 	
-	//hat object
-	state.entities.push_back(Entity(500, 200, &state.textures[1]));
-	auto hat = &state.entities[0];
+	//new style player allocation
+	player = state.new_avatar((screen_height * 0.25), (screen_height * 0.25),
+							  (screen_width * 0.75), (screen_height * 0.75),
+							  0,
+							  "../assets/catt_transparent.png",
+							  "../src/scripts/test.lua");
+	
+	//new style hat allocation
+	hat = state.new_entity(0,0,500,200,1,
+								   "../assets/tophat.png");
+
 	hat->clamp_to(player->get_top());
 	hat->set_offset(175, -70);
 	hat->flip_horizontal();
 			
 	// audio input from microphone
 	mic voice;
-	
-	//load test scripts
-	state.scripts.push_back(Script("../src/scripts/test.lua", L));
-	player->set_script(&state.scripts[0]);
-	state.avatars[0].set_priority(1);
-	state.entities[0].set_priority(2);
-
-	//set drawable objects
-	for(size_t i = 0; i < state.avatars.size(); i++)
-	{
-		state.draw_list.push_back((Object*)&state.avatars[i]);
-	}
-
-	for(size_t i = 0; i < state.entities.size(); i++)
-	{
-		state.draw_list.push_back((Object*)&state.entities[i]);
-	}
-	state.sort_drawlist();
 
 	//main loop
 	bool running = true;
@@ -122,11 +99,12 @@ int main()
 		SDL_RenderClear(renderer);
 		handle_input(running);
 		
+		//TODO - make wrappers for this
 		//perform talk operation for every avatar
 		double db = voice.get();
 		for(size_t i = 0; i < state.avatars.size(); i++)
 		{
-			state.avatars[i].talk(db);
+			state.avatars[i]->talk(db);
 		}
 
 		//draw all drawable objects
@@ -287,28 +265,21 @@ static void handle_keyinput(SDL_Event &e)
 	switch(e.key.keysym.sym)
 	{
 		case SDLK_ESCAPE:
-			last_selected = NULL;
-		break;
-
-		case SDLK_r:
-			if(last_selected)
-			{
-				last_selected->set_texture(&state.textures[0]);
-			}
+			state.last_selected = NULL;
 		break;
 
 		case SDLK_EQUALS:
-			if(last_selected)
+			if(state.last_selected)
 			{	
-				last_selected->inc_priority();
+				state.last_selected->inc_priority();
 				state.sort_drawlist();
 			}
 		break;
 
 		case SDLK_MINUS:
-			if(last_selected)
+			if(state.last_selected)
 			{
-				last_selected->dec_priority();
+				state.last_selected->dec_priority();
 				state.sort_drawlist();
 			}
 		break;
