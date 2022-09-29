@@ -5,12 +5,12 @@
 #include <thread>
 using namespace std;
 
-#include "globals.hpp"
+#include "state.hpp"
 
 //User input manager from console (runs on separate thread)
 class Console
 {
-
+/*
 private:
 	//thread input_thread; //thread that will handle IO
 	bool running;
@@ -42,7 +42,7 @@ private:
 		
 		return to_return;
 	}
-	/*
+
 	//thread that will control grabbing user input
 	void input_thread()
 	{

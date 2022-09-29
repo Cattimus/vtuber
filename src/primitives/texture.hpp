@@ -2,13 +2,15 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+
+#include <iostream>
 using namespace std;
 
 class Texture
 {
 private:
 	SDL_Texture* texture;
-	std::string file_path;
+	string file_path;
 	int w;
 	int h;
 
@@ -21,7 +23,7 @@ public:
 		SDL_Surface* img_temp = IMG_Load(path);
 		if(!img_temp)
 		{
-			printf("Failed to load image for texture\n");
+			cout << "failed to load image for texture\n";	
 		}
 		w = img_temp->w;
 		h = img_temp->h;
@@ -29,6 +31,25 @@ public:
 		//create texture from the loaded surface
 		texture = SDL_CreateTextureFromSurface(renderer, img_temp);
 		SDL_FreeSurface(img_temp);
+	}
+
+	Texture(const Texture& to_copy)
+	{
+		*this = to_copy;
+	}
+
+	Texture& operator=(const Texture& to_copy)
+	{
+		if(this == &to_copy)
+		{
+			return *this;
+		}
+
+		texture = to_copy.texture;
+		file_path = to_copy.file_path;
+		w = to_copy.w;
+		h = to_copy.h;
+		return *this;
 	}
 
 	int getw()

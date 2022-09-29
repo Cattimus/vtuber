@@ -23,7 +23,7 @@ include_directories(src)
 include_directories(/usr/include/SDL2)
 include_directories(/usr/include/luajit-2.1)
 
-add_compile_options(-g -Wall)
+add_compile_options(-g -Wall -D_GLIBCXX_DEBUG)
 
 add_executable(main ${SOURCES})
 target_link_libraries(main ${CMAKE_DL_LIBS})

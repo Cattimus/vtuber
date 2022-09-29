@@ -63,6 +63,11 @@ public:
 		*this = to_copy;
 	}
 
+	virtual ~Avatar()
+	{
+		return;
+	}
+
 	Avatar& operator=(const Avatar& to_copy)
 	{
 		//self assignment guard

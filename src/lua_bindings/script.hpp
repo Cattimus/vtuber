@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+using namespace std;
 
 extern "C"
 {
@@ -15,8 +16,8 @@ extern "C"
 class Script
 {
 private:
-	std::string file_path;
-	std::string last_called;
+	string file_path;
+	string last_called;
 	lua_State* L;
 
 	//create a new environment and set it in globals
@@ -62,6 +63,7 @@ public:
 	{
 		this->file_path = path;
 		this->L = L;
+		this->last_called = "";
 
 		//create a new environment for script
 		init_environment();
@@ -124,5 +126,10 @@ public:
 	lua_State* get_state()
 	{
 		return L;
+	}
+
+	string get_path()
+	{
+		return file_path;
 	}
 };

@@ -59,6 +59,7 @@ public:
 	Entity(int w, int h, Texture* texture) : Object(w, h)
 	{
 		init(texture);
+
 	}
 
 	Entity(SDL_Rect size, Texture* texture) : Object(size)
@@ -69,6 +70,11 @@ public:
 	Entity(const Entity& to_copy) : Object(to_copy)
 	{
 		*this = to_copy;
+	}
+
+	virtual ~Entity()
+	{
+		return;
 	}
 
 	Entity& operator=(const Entity& to_copy)
