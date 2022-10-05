@@ -6,19 +6,28 @@ project(main)
 
 set(SOURCES
 	src/main.cpp
+	src/state.hpp
+	src/state.cpp
+
 	src/primitives/avatar.hpp
 	src/primitives/avatar.cpp
+
 	src/primitives/entity.hpp
+	src/primitives/entity.cpp
+
 	src/primitives/object.hpp
+
 	src/primitives/texture.hpp
+
 	src/user_input/mic.hpp
 	src/user_input/console.hpp
+
 	src/lua_bindings/object_binding.hpp
 	src/lua_bindings/object_binding.cpp
+
 	src/lua_bindings/script.hpp
 	src/lua_bindings/script.cpp
-	src/state.hpp
-	src/state.cpp)
+	)
 
 include_directories(libs)
 include_directories(src)
