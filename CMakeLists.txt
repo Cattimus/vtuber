@@ -15,6 +15,7 @@ set(SOURCES
 	src/lua_bindings/object_binding.hpp
 	src/lua_bindings/object_binding.cpp
 	src/lua_bindings/script.hpp
+	src/lua_bindings/script.cpp
 	src/state.hpp
 	src/state.cpp)
 
