@@ -7,6 +7,7 @@ project(main)
 set(SOURCES
 	src/main.cpp
 	src/primitives/avatar.hpp
+	src/primitives/avatar.cpp
 	src/primitives/entity.hpp
 	src/primitives/object.hpp
 	src/primitives/texture.hpp
