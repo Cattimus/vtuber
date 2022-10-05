@@ -19,6 +19,7 @@ set(SOURCES
 	src/primitives/object.cpp
 
 	src/primitives/texture.hpp
+	src/primitives/texture.cpp
 
 	src/user_input/mic.hpp
 	src/user_input/console.hpp
