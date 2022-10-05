@@ -85,6 +85,7 @@ Texture* Avatar::get_texture()
 	return top.get_texture();
 }
 
+//split object along the y value. this gets translated with respect to global coordinates
 void Avatar::avatar_split(double y)
 {
 	if(!is_split)
@@ -117,6 +118,7 @@ Object* Avatar::get_bottom()
 	return (Object*)&bottom;
 }
 
+//perform the "talking" animation. This may also be defined in a script.
 void Avatar::talk(double height)
 {	
 	if(!is_split)
