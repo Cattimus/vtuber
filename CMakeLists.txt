@@ -16,6 +16,7 @@ set(SOURCES
 	src/primitives/entity.cpp
 
 	src/primitives/object.hpp
+	src/primitives/object.cpp
 
 	src/primitives/texture.hpp
 
