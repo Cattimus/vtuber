@@ -10,10 +10,10 @@ using namespace std;
 //User input manager from console (runs on separate thread)
 class Console
 {
-/*
 private:
 	//thread input_thread; //thread that will handle IO
 	bool running;
+	State* state;
 	
 	//[manipulation]
 	//image  (path-to-image)    <- checks for existing instances of texture
@@ -64,25 +64,25 @@ private:
 			}
 			
 			//skip the rest of the loop if selected object isn't set
-			if(!last_selected)
+			if(!state->last_selected)
 			{
 				continue;
 			}
 
 			//check if a texture has already been created for that file
-			for(size_t i = 0; i < textures.size(); i++)
+			for(size_t i = 0; i < state->textures.size(); i++)
 			{
 				//if path matches, set texture and continue next loop
-				if(textures[i].get_path() == arg_list[1])
+				if(state->textures[i]->get_path() == arg_list[1])
 				{
-					last_selected->set_texture(&textures[i]);
+					state->last_selected->set_texture(state->textures[i]);
 					continue;
 				}
 			}
 			
 			//create a new texture for the file
-			textures.push_back(Texture(arg_list[1].c_str()));
-			last_selected->set_texture(&textures[textures.size() - 1]);
+			state->textures.push_back(new Texture(arg_list[1].c_str(), state->renderer));
+			state->last_selected->set_texture(state->textures[state->textures.size() - 1]);
 		}
 
 		//change size of last selected object (x, y)
@@ -133,7 +133,6 @@ private:
 
 		}
 	}
-	*/
 
 	public:
 	

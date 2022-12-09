@@ -81,6 +81,7 @@ int main()
 							  "../assets/catt_transparent.png",
 							  "../src/scripts/test.lua");
 	
+	/*
 	//new style hat allocation
 	hat = state.new_entity(0,0,500,200,1,
 								   "../assets/tophat.png");
@@ -88,6 +89,7 @@ int main()
 	hat->clamp_to(player->get_top());
 	hat->set_offset(175, -70);
 	hat->flip_horizontal();
+	*/
 			
 	// audio input from microphone
 	mic voice;

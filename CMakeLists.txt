@@ -29,6 +29,9 @@ set(SOURCES
 
 	src/lua_bindings/script.hpp
 	src/lua_bindings/script.cpp
+
+	src/user_input/console.hpp
+	src/user_input/console.cpp
 	)
 
 include_directories(libs)
